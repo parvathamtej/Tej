@@ -18,8 +18,18 @@ export const preloader = {
   tagline: 'LOADING — FAST LEARNER DETECTED',
 }
 
-export const heroMarquee =
-  'AI & MACHINE LEARNING ✦ DATA-DRIVEN SYSTEMS ✦ PYTHON ✦ REACT ✦ FAST GRASPER ✦ 日本語 OK ✦ '
+// Bottom HUD bar — chapter names must match section order in App.jsx
+export const chapters = [
+  '00 — INTRO',
+  '01 — THE PITCH',
+  '02 — THE PROOF',
+  '03 — THE STACK',
+  '04 — SELECTED WORK',
+  '05 — THE RECEIPTS',
+  '06 — SAY HI',
+]
+
+export const availability = 'OPEN TO OPPORTUNITIES'
 
 // Manifesto — segments; accent:true renders acid + Gambetta italic
 export const manifesto = {
@@ -72,10 +82,10 @@ export const velocity = {
     },
     {
       year: '2025',
-      tag: 'HUMAN LANG',
-      title: '日本語も。',
-      body: 'Reached advanced Japanese. Grammar is just another syntax tree.',
-      footnote: '@n-levels-deep',
+      tag: 'SYSTEMS',
+      title: 'Production patterns',
+      body: 'Pipelines, deployment, monitoring — learning how data systems behave outside the notebook.',
+      footnote: '@scaling-up',
     },
     {
       year: '2026',
@@ -96,7 +106,6 @@ export const stack = {
     { label: 'AI / ML', items: 'scikit-learn · TensorFlow · Pandas · NumPy · Data Pipelines' },
     { label: 'WEB', items: 'React · Node.js · Tailwind · Firebase' },
     { label: 'TOOLS', items: 'Git · Linux · AutoCAD · Figma' },
-    { label: 'HUMAN', items: 'English · Telugu · Hindi · Japanese (adv.)' },
   ],
   ticker: '> absorbing_now: LLM tooling — GSAP — cloud infra',
 }
@@ -153,7 +162,7 @@ export const contact = {
   links: [
     { label: 'LINKEDIN', href: 'https://www.linkedin.com/in/tej--prakash/' },
     { label: 'GITHUB', href: 'https://github.com/tej-prakash' },
-    { label: 'OLD SITE', href: 'https://tej--portfolio.web.app/' },
+    { label: 'MORE ABOUT ME', href: 'https://tej--portfolio.web.app/' },
   ],
   credit: 'DESIGNED & BUILT WITH AN AI PAIR-PROGRAMMER',
   marquee: "LET'S TALK ✦ ",

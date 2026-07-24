@@ -51,17 +51,27 @@ export default function Work() {
             rotate: gsap.utils.clamp(-7, 7, vx),
           })
         }
+        let isOpen = false
         const open = (project) => {
+          isOpen = true
           artRef.current.className = `art-${project.art} absolute inset-0`
           nameRef.current.textContent = project.name
           gsap.to(preview, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.45, ease: EASE })
         }
         const close = () => {
+          if (!isOpen) return
+          isOpen = false
           gsap.to(preview, { clipPath: 'inset(50% 0% 50% 0%)', duration: 0.35, ease: 'power3.in' })
         }
+        // Scrolling never fires mouseleave (the page moves, not the cursor) —
+        // close on scroll or the preview sticks around over other sections.
+        // Lenis's emitter fires inside the rAF loop; native scroll is a fallback.
+        const onScroll = () => close()
+        const lenisSub = gsap.delayedCall(0, () => window.__lenis?.on('scroll', onScroll))
 
         const section = sectionRef.current
         section.addEventListener('mousemove', onMove)
+        window.addEventListener('scroll', onScroll, { passive: true })
         gsap.ticker.add(tick)
 
         const rows = gsap.utils.toArray('.work-row')
@@ -74,6 +84,9 @@ export default function Work() {
 
         return () => {
           section.removeEventListener('mousemove', onMove)
+          window.removeEventListener('scroll', onScroll)
+          lenisSub.kill()
+          window.__lenis?.off('scroll', onScroll)
           gsap.ticker.remove(tick)
           handlers.forEach(({ row, enter }) => {
             row.removeEventListener('mouseenter', enter)

@@ -15,10 +15,12 @@
 }
 
 :root {
-  /* Chapter color system — GSAP tweens these three variables for section inversions */
+  /* Chapter color system — GSAP tweens these variables for section inversions */
   --bg-page: #0e0e0c;
   --fg-page: #edeae3;
   --hair: rgba(237, 234, 227, 0.14);
+  /* Accent that survives the light chapter (acid on ink, olive on bone) */
+  --accent-ui: #c8f04b;
 }
 
 html {
@@ -156,16 +158,23 @@ body {
   }
 }
 
-/* Stacked roll-hover links (Contact) */
+/* Stacked roll-hover links (Contact) — container clips to exactly one line */
 .roll {
   display: inline-block;
   overflow: hidden;
-  line-height: 1.15;
+  height: 1.4em;
+  line-height: 1.4;
 }
 .roll > span {
   display: block;
   transition: transform 0.45s cubic-bezier(0.19, 1, 0.22, 1);
 }
-.roll:hover > span {
+.roll:hover > span,
+.roll:focus-visible > span {
   transform: translateY(-100%);
+}
+
+/* Turbo easter egg: the hero star spins faster while turbo is on */
+.hero-spin.turbo {
+  animation-duration: 2.5s;
 }

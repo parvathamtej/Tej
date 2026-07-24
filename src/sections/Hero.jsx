@@ -2,8 +2,7 @@ import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import Marquee from '../components/Marquee'
-import { heroMarquee, identity } from '../data/content'
+import { identity } from '../data/content'
 import { DUR, EASE, STAGGER, reduced } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
@@ -17,6 +16,20 @@ const Line = ({ text, className = '' }) => (
     ))}
   </span>
 )
+
+// Easter egg: the ✦ toggles turbo mode — the whole site scrolls faster.
+const toggleTurbo = (e) => {
+  const on = !window.__turbo
+  window.__turbo = on
+  if (window.__lenis) window.__lenis.options.duration = on ? 0.45 : 1.15
+  e.currentTarget.classList.toggle('turbo', on)
+  gsap.fromTo(
+    e.currentTarget,
+    { scale: 0.8 },
+    { scale: on ? 1.2 : 1, duration: 0.5, ease: 'power4.out' },
+  )
+  window.dispatchEvent(new CustomEvent('tej:turbo', { detail: on }))
+}
 
 export default function Hero({ started }) {
   const sectionRef = useRef(null)
@@ -79,7 +92,7 @@ export default function Hero({ started }) {
           <Line text={identity.last} className="text-right md:text-left md:pl-[18vw]" />
         </h1>
 
-        <div className="mt-8 flex flex-wrap items-end justify-between gap-6 pb-10 md:mt-10">
+        <div className="mt-8 flex flex-wrap items-end justify-between gap-6 pb-16 md:mt-10">
           <p className="hero-soft mono-label opacity-60">SCROLL ↓</p>
           <div className="hero-soft max-w-md text-right">
             <p className="mono-label text-acid">{identity.role}</p>
@@ -90,20 +103,15 @@ export default function Hero({ started }) {
         </div>
       </div>
 
-      <div className="hero-soft hairline-t">
-        <Marquee
-          text={heroMarquee}
-          speed={26}
-          className="display-type py-4 text-[clamp(1.1rem,2vw,1.6rem)] opacity-80"
-        />
-      </div>
-
-      <span
-        aria-hidden="true"
-        className="hero-spin pointer-events-none absolute right-[8vw] top-[30%] hidden text-[clamp(2rem,4vw,3.5rem)] text-acid md:block"
+      <button
+        type="button"
+        onClick={toggleTurbo}
+        aria-label="Toggle turbo scroll mode"
+        data-cursor="TURBO?"
+        className="hero-spin hero-soft absolute right-[8vw] top-[30%] hidden cursor-pointer border-0 bg-transparent p-2 text-[clamp(2rem,4vw,3.5rem)] text-acid md:block"
       >
         ✦
-      </span>
+      </button>
     </section>
   )
 }

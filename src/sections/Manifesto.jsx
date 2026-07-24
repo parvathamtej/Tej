@@ -40,6 +40,7 @@ export default function Manifesto() {
   return (
     <section
       ref={sectionRef}
+      id="about"
       className="relative z-[5] flex min-h-dvh flex-col justify-center bg-ink px-5 py-24 md:px-8"
     >
       <div className="ch-meta-m mb-10 flex items-baseline justify-between">

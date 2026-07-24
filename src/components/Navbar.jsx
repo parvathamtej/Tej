@@ -1,15 +1,14 @@
 import { identity } from '../data/content'
-import { useIST } from '../lib/useIST'
 
 const LINKS = [
+  { label: 'ABOUT', target: '#about' },
   { label: 'WORK', target: '#work' },
   { label: 'STACK', target: '#stack' },
   { label: 'CONTACT', target: 'bottom' },
 ]
 
+// Color rides the chapter variables, so the bar stays legible on every flood.
 export default function Navbar() {
-  const time = useIST()
-
   const go = (e, target) => {
     e.preventDefault()
     const lenis = window.__lenis
@@ -22,8 +21,14 @@ export default function Navbar() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 mix-blend-difference">
-      <nav className="flex items-center justify-between px-5 py-4 text-bone md:px-8">
+    <header className="fixed inset-x-0 top-0 z-50 text-[var(--fg-page)]">
+      <nav
+        className="flex items-center justify-between px-5 py-4 md:px-8"
+        style={{
+          background:
+            'linear-gradient(to bottom, color-mix(in srgb, var(--bg-page) 72%, transparent), transparent)',
+        }}
+      >
         <a
           href="#top"
           onClick={(e) => {
@@ -47,9 +52,6 @@ export default function Navbar() {
               {l.label}
             </a>
           ))}
-          <span className="mono-label hidden opacity-60 md:inline" aria-label="Local time in Hyderabad">
-            HYD {time} IST
-          </span>
         </div>
       </nav>
     </header>

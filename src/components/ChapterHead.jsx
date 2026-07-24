@@ -39,7 +39,7 @@ export default function ChapterHead({ index, label, title, hint }) {
     <div ref={rootRef} className="mb-[clamp(2.5rem,6vh,4.5rem)]">
       <div className="ch-meta hairline-t flex items-baseline justify-between pt-4">
         <p className="mono-label">
-          <span className="text-acid">[{index}]</span>
+          <span className="text-[var(--accent-ui)]">[{index}]</span>
           <span className="ml-3 opacity-60">{label}</span>
         </p>
         {hint ? <p className="mono-label opacity-40">{hint}</p> : null}

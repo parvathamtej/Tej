@@ -8,6 +8,7 @@ import Grain from './components/Grain'
 import Cursor from './components/Cursor'
 import Progress from './components/Progress'
 import Navbar from './components/Navbar'
+import Hud from './components/Hud'
 import Hero from './sections/Hero'
 import Manifesto from './sections/Manifesto'
 import Velocity from './sections/Velocity'
@@ -18,14 +19,47 @@ import Contact from './sections/Contact'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Chapter color system: the page floods acid for THE STACK, back to ink for work
-const ACID = { '--bg-page': '#c8f04b', '--fg-page': '#0e0e0c', '--hair': 'rgba(14,14,12,0.18)' }
-const INK = { '--bg-page': '#0e0e0c', '--fg-page': '#edeae3', '--hair': 'rgba(237,234,227,0.14)' }
+// Chapter color system: the page floods to warm bone for THE STACK, back to ink
+// for work. Acid stays an accent; --accent-ui swaps to olive so it reads on bone.
+const LIGHT = {
+  '--bg-page': '#edeae3',
+  '--fg-page': '#0e0e0c',
+  '--hair': 'rgba(14,14,12,0.18)',
+  '--accent-ui': '#55671a',
+}
+const INK = {
+  '--bg-page': '#0e0e0c',
+  '--fg-page': '#edeae3',
+  '--hair': 'rgba(237,234,227,0.14)',
+  '--accent-ui': '#c8f04b',
+}
 
 export default function App() {
   const [started, setStarted] = useState(false)
 
   useGSAP(() => {
+    // Chapter detection for the HUD readout — App's effect runs after every
+    // section has mounted AND after pins wrapped their sections, so the query
+    // is ordering-safe. Pinned sections use their pin-spacer as the trigger so
+    // the chapter stays active for the whole pinned stretch.
+    const say = (i) => window.dispatchEvent(new CustomEvent('tej:chapter', { detail: i }))
+    gsap.utils.toArray('.site-main section').forEach((el, i) => {
+      const target = el.parentElement?.classList.contains('pin-spacer') ? el.parentElement : el
+      ScrollTrigger.create({
+        trigger: target,
+        start: 'top 55%',
+        end: 'bottom 55%',
+        onToggle: (self) => self.isActive && say(i),
+      })
+    })
+    // Chapter 06 = the footer reveal (fixed element — keyed off main's bottom edge)
+    ScrollTrigger.create({
+      trigger: '.site-main',
+      start: 'bottom 60%',
+      onEnter: () => say(6),
+      onLeaveBack: () => say(5),
+    })
+
     const mm = gsap.matchMedia()
     mm.add('(prefers-reduced-motion: no-preference)', () => {
       const flood = (vars) =>
@@ -33,28 +67,28 @@ export default function App() {
       ScrollTrigger.create({
         trigger: '#stack',
         start: 'top 62%',
-        onEnter: () => flood(ACID),
+        onEnter: () => flood(LIGHT),
         onLeaveBack: () => flood(INK),
       })
       ScrollTrigger.create({
         trigger: '#work',
         start: 'top 55%',
         onEnter: () => flood(INK),
-        onLeaveBack: () => flood(ACID),
+        onLeaveBack: () => flood(LIGHT),
       })
     })
     mm.add('(prefers-reduced-motion: reduce)', () => {
       ScrollTrigger.create({
         trigger: '#stack',
         start: 'top 62%',
-        onEnter: () => gsap.set('html', ACID),
+        onEnter: () => gsap.set('html', LIGHT),
         onLeaveBack: () => gsap.set('html', INK),
       })
       ScrollTrigger.create({
         trigger: '#work',
         start: 'top 55%',
         onEnter: () => gsap.set('html', INK),
-        onLeaveBack: () => gsap.set('html', ACID),
+        onLeaveBack: () => gsap.set('html', LIGHT),
       })
     })
     return () => mm.revert()
@@ -67,6 +101,7 @@ export default function App() {
       <Cursor />
       <Progress />
       <Navbar />
+      <Hud />
       <main
         className="site-main relative z-10 mb-[100dvh]"
         style={{ background: 'var(--bg-page)' }}
