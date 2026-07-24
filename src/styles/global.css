@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0e0e0c;
+  --color-ink-soft: #161613;
+  --color-bone: #edeae3;
+  --color-bone-dim: rgba(237, 234, 227, 0.55);
+  --color-acid: #c8f04b;
+  --color-acid-deep: #a8d62f;
+
+  --font-display: "Clash Display", "General Sans", sans-serif;
+  --font-body: "General Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-serif: "Gambetta", Georgia, serif;
+}
+
+:root {
+  /* Chapter color system — GSAP tweens these three variables for section inversions */
+  --bg-page: #0e0e0c;
+  --fg-page: #edeae3;
+  --hair: rgba(237, 234, 227, 0.14);
+}
+
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* Lenis recommended styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg-page);
+  color: var(--fg-page);
+  font-family: var(--font-body);
+  font-weight: 400;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-acid);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-acid);
+  outline-offset: 3px;
+}
+
+@utility display-type {
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+}
+
+@utility serif-accent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: inherit;
+}
+
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 400;
+}
+
+@utility hairline-t {
+  border-top: 1px solid var(--hair);
+}
+
+/* Word-illumination initial state (Manifesto) — visible-by-default at low opacity */
+.m-word {
+  opacity: 0.16;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-word {
+    opacity: 1;
+  }
+}
+
+/* Work hover-preview gradient art — one visual world per project, no images */
+.art-kiosk {
+  background:
+    radial-gradient(circle at 30% 35%, #c8f04b 0, transparent 42%),
+    radial-gradient(circle at 72% 70%, rgba(200, 240, 75, 0.35) 0, transparent 50%),
+    repeating-linear-gradient(0deg, transparent 0 22px, rgba(237, 234, 227, 0.08) 22px 23px),
+    #161613;
+}
+.art-site {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 28px, rgba(200, 240, 75, 0.28) 28px 29px),
+    repeating-linear-gradient(0deg, transparent 0 28px, rgba(200, 240, 75, 0.28) 28px 29px),
+    linear-gradient(135deg, #161613 0%, #0e0e0c 55%, rgba(200, 240, 75, 0.3) 100%);
+}
+.art-data {
+  background: conic-gradient(
+    from 210deg at 60% 40%,
+    #0e0e0c 0deg,
+    #c8f04b 90deg,
+    #0e0e0c 200deg,
+    rgba(200, 240, 75, 0.4) 290deg,
+    #0e0e0c 360deg
+  );
+}
+
+/* Hero's slow-rotating star */
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.hero-spin {
+  animation: spin-slow 14s linear infinite;
+}
+
+/* Terminal caret blink (Stack ticker) */
+@keyframes caret-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+.ticker-caret {
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-spin,
+  .ticker-caret {
+    animation: none;
+  }
+}
+
+/* Stacked roll-hover links (Contact) */
+.roll {
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1.15;
+}
+.roll > span {
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+}
+.roll:hover > span {
+  transform: translateY(-100%);
+}
