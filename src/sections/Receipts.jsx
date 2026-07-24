@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ChapterHead from '../components/ChapterHead'
+import Stamp from '../components/Stamp'
 import { receipts } from '../data/content'
 import { DUR_S, EASE } from '../lib/motion'
 
@@ -36,11 +37,13 @@ export default function Receipts() {
         {receipts.rows.map((row) => (
           <li
             key={row.left}
-            className="receipt-row hairline-t -mx-3 grid grid-cols-[1fr_auto] items-baseline gap-x-4 gap-y-1 px-3 py-6 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:grid-cols-[14rem_1fr_auto]"
+            className="receipt-row group hairline-t -mx-3 grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-3 py-6 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:grid-cols-[14rem_1fr_auto]"
           >
             <p className="display-type text-[clamp(1.1rem,1.8vw,1.5rem)]">{row.left}</p>
-            <p className="col-span-2 text-bone-dim md:col-span-1 md:text-[inherit]">{row.mid}</p>
-            <p className="mono-label col-start-2 row-start-1 opacity-60 md:col-start-3">{row.right}</p>
+            <p className="col-span-2 text-bone-dim group-hover:text-[var(--bg-page)] md:col-span-1">{row.mid}</p>
+            <div className="col-start-2 row-start-1 md:col-start-3">
+              <Stamp text={row.right} />
+            </div>
           </li>
         ))}
       </ul>

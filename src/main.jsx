@@ -6,7 +6,7 @@ import { identity } from './data/content'
 
 // Easter egg for the devs who look under the hood
 console.log(
-  '%c TEJ.EXE %c curiosity detected — that’s the whole brand. say hi → ' + identity.email,
+  '%c TEJ.EXE %c curiosity detected. that’s the whole brand. say hi → ' + identity.email,
   'background:#C8F04B;color:#0E0E0C;font-weight:bold;padding:4px 8px;border-radius:2px;',
   'color:#C8F04B;padding:4px 0;',
 )

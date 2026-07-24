@@ -97,7 +97,7 @@ export default function Hud() {
             aria-hidden="true"
             className="h-1.5 w-1.5 rounded-full bg-[var(--accent-ui)] animate-pulse motion-reduce:animate-none"
           />
-          {availability} — {identity.email}
+          {availability} · {identity.email}
         </a>
         <span className="opacity-60">HYD {time} IST</span>
       </div>

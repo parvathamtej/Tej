@@ -3,12 +3,17 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ChapterHead from '../components/ChapterHead'
+import Stamp from '../components/Stamp'
 import { work } from '../data/content'
 import { DUR_S, EASE, MM } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Numbered project rows; on desktop a preview card chases the cursor.
+// Numbered project rows. On desktop a preview card chases the cursor.
+// The preview is STATELESS: every frame it hit-tests what's under the cursor
+// (elementFromPoint) and exists only while that's a work row. Scrolling with a
+// frozen mouse, teleporting, anything: the moment the cursor isn't on a row,
+// it closes. No event bookkeeping to go stale.
 export default function Work() {
   const sectionRef = useRef(null)
   const previewRef = useRef(null)
@@ -32,14 +37,26 @@ export default function Work() {
 
       mm.add(`${MM.desk} and (pointer: fine)`, () => {
         const preview = previewRef.current
+        const rows = gsap.utils.toArray('.work-row')
         const pos = { x: 0, y: 0 }
-        const target = { x: 0, y: 0 }
+        const target = { x: -1, y: -1 }
         let vx = 0
+        let activeRow = null
 
         const onMove = (e) => {
           target.x = e.clientX
           target.y = e.clientY
         }
+
+        const open = (project) => {
+          artRef.current.className = `art-${project.art} absolute inset-0`
+          nameRef.current.textContent = project.name
+          gsap.to(preview, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.45, ease: EASE, overwrite: 'auto' })
+        }
+        const close = () => {
+          gsap.to(preview, { clipPath: 'inset(50% 0% 50% 0%)', duration: 0.35, ease: 'power3.in', overwrite: 'auto' })
+        }
+
         const tick = () => {
           const dx = target.x - pos.x
           pos.x += dx * 0.12
@@ -50,48 +67,21 @@ export default function Work() {
             y: pos.y - 110,
             rotate: gsap.utils.clamp(-7, 7, vx),
           })
+          // Stateless presence check, every frame
+          const el = target.x >= 0 ? document.elementFromPoint(target.x, target.y) : null
+          const row = el ? el.closest('.work-row') : null
+          if (row !== activeRow) {
+            activeRow = row
+            if (row) open(work.projects[rows.indexOf(row)])
+            else close()
+          }
         }
-        let isOpen = false
-        const open = (project) => {
-          isOpen = true
-          artRef.current.className = `art-${project.art} absolute inset-0`
-          nameRef.current.textContent = project.name
-          gsap.to(preview, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.45, ease: EASE })
-        }
-        const close = () => {
-          if (!isOpen) return
-          isOpen = false
-          gsap.to(preview, { clipPath: 'inset(50% 0% 50% 0%)', duration: 0.35, ease: 'power3.in' })
-        }
-        // Scrolling never fires mouseleave (the page moves, not the cursor) —
-        // close on scroll or the preview sticks around over other sections.
-        // Lenis's emitter fires inside the rAF loop; native scroll is a fallback.
-        const onScroll = () => close()
-        const lenisSub = gsap.delayedCall(0, () => window.__lenis?.on('scroll', onScroll))
 
-        const section = sectionRef.current
-        section.addEventListener('mousemove', onMove)
-        window.addEventListener('scroll', onScroll, { passive: true })
+        window.addEventListener('mousemove', onMove, { passive: true })
         gsap.ticker.add(tick)
-
-        const rows = gsap.utils.toArray('.work-row')
-        const handlers = rows.map((row, i) => {
-          const enter = () => open(work.projects[i])
-          row.addEventListener('mouseenter', enter)
-          row.addEventListener('mouseleave', close)
-          return { row, enter }
-        })
-
         return () => {
-          section.removeEventListener('mousemove', onMove)
-          window.removeEventListener('scroll', onScroll)
-          lenisSub.kill()
-          window.__lenis?.off('scroll', onScroll)
+          window.removeEventListener('mousemove', onMove)
           gsap.ticker.remove(tick)
-          handlers.forEach(({ row, enter }) => {
-            row.removeEventListener('mouseenter', enter)
-            row.removeEventListener('mouseleave', close)
-          })
         }
       })
 
@@ -108,17 +98,17 @@ export default function Work() {
           <li
             key={p.index}
             data-cursor="VIEW"
-            className="work-row hairline-t -mx-3 grid grid-cols-[2.5rem_1fr] items-baseline gap-x-4 gap-y-2 px-3 py-8 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:grid-cols-[3.5rem_1fr_auto] md:py-10"
+            className="work-row group hairline-t -mx-3 grid grid-cols-[2.5rem_1fr] items-baseline gap-x-4 gap-y-2 px-3 py-8 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:grid-cols-[3.5rem_1fr_auto] md:py-10"
           >
-            <p className="mono-label text-acid">{p.index}</p>
+            <p className="mono-label text-acid group-hover:text-[var(--bg-page)]">{p.index}</p>
             <div>
               <h3 className="display-type text-[clamp(1.5rem,3.4vw,2.9rem)]">{p.name}</h3>
-              <p className="mt-3 max-w-[52ch] text-bone-dim">{p.desc}</p>
+              <p className="mt-3 max-w-[52ch] text-bone-dim group-hover:text-[var(--bg-page)]">{p.desc}</p>
               <p className="mono-label mt-4 opacity-50">{p.tags}</p>
             </div>
-            <p className="mono-label col-start-2 opacity-70 md:col-start-3 md:self-start md:border md:border-[var(--hair)] md:px-2.5 md:py-1">
-              {p.status}
-            </p>
+            <div className="col-start-2 md:col-start-3 md:self-start">
+              <Stamp text={p.status} />
+            </div>
           </li>
         ))}
       </ul>

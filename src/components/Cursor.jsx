@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { finePointer } from '../lib/motion'
 
+// Custom cursor dot + label pill. STATELESS: every frame it hit-tests what is
+// actually under the pointer, so scale/label can never stick after scrolling
+// moves the page beneath a stationary cursor.
 export default function Cursor() {
   const [enabled, setEnabled] = useState(false)
   const dotRef = useRef(null)
@@ -17,6 +20,8 @@ export default function Cursor() {
     const tag = tagRef.current
     const pos = { x: -100, y: -100 }
     const target = { x: -100, y: -100 }
+    let scaled = false
+    let curLabel = null
 
     const onMove = (e) => {
       target.x = e.clientX
@@ -28,53 +33,30 @@ export default function Cursor() {
       pos.y += (target.y - pos.y) * 0.18
       gsap.set(dot, { x: pos.x, y: pos.y })
       gsap.set(tag, { x: pos.x + 20, y: pos.y + 20 })
-    }
 
-    let hovering = false
+      const el = target.x >= 0 ? document.elementFromPoint(target.x, target.y) : null
+      const hit = el ? el.closest('[data-cursor]') : null
+      const label = hit ? hit.getAttribute('data-cursor') || null : null
 
-    const rest = () => {
-      hovering = false
-      gsap.to(dot, { scale: 1, duration: 0.35, ease: 'power4.out' })
-      gsap.to(tag, { autoAlpha: 0, duration: 0.2, ease: 'power2.out' })
-    }
-
-    const onOver = (e) => {
-      const hit = e.target.closest('[data-cursor]')
-      if (!hit) return
-      hovering = true
-      gsap.to(dot, { scale: 4, duration: 0.35, ease: 'power4.out' })
-      const text = hit.getAttribute('data-cursor')
-      if (text) {
-        tag.textContent = text
-        gsap.to(tag, { autoAlpha: 1, duration: 0.25, ease: 'power4.out' })
+      if (!!hit !== scaled) {
+        scaled = !!hit
+        gsap.to(dot, { scale: scaled ? 4 : 1, duration: 0.35, ease: 'power4.out', overwrite: 'auto' })
+      }
+      if (label !== curLabel) {
+        curLabel = label
+        if (label) {
+          tag.textContent = label
+          gsap.to(tag, { autoAlpha: 1, duration: 0.25, ease: 'power4.out', overwrite: 'auto' })
+        } else {
+          gsap.to(tag, { autoAlpha: 0, duration: 0.2, ease: 'power2.out', overwrite: 'auto' })
+        }
       }
     }
 
-    const onOut = (e) => {
-      if (!e.target.closest('[data-cursor]')) return
-      rest()
-    }
-
-    // Scrolling moves the page under a stationary cursor without firing
-    // mouseout — reset so the label/scale never stick.
-    const onScroll = () => {
-      if (hovering) rest()
-    }
-
-    const lenisSub = gsap.delayedCall(0, () => window.__lenis?.on('scroll', onScroll))
-
-    window.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseover', onOver)
-    document.addEventListener('mouseout', onOut)
-    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('mousemove', onMove, { passive: true })
     gsap.ticker.add(tick)
     return () => {
       window.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseover', onOver)
-      document.removeEventListener('mouseout', onOut)
-      window.removeEventListener('scroll', onScroll)
-      lenisSub.kill()
-      window.__lenis?.off('scroll', onScroll)
       gsap.ticker.remove(tick)
     }
   }, [enabled])
