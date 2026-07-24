@@ -1,16 +1,40 @@
-# React + Vite
+# TEJ PRAKASH — Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> Learns fast. Builds faster.
 
-Currently, two official plugins are available:
+Scroll-driven single-page portfolio for Tej Prakash (Software Developer — AI & ML, Arrivio, Hyderabad). Dark ink + acid lime, kinetic typography, chapter-based narrative with pinned scroll stories.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Stack:** Vite · React 19 · Tailwind CSS v4 · GSAP (ScrollTrigger) · Lenis smooth scroll
+**Fonts:** Clash Display · General Sans · Gambetta italic (Fontshare) · JetBrains Mono (Google)
 
-## React Compiler
+## Run
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # production → dist/
+npm run preview  # serve the build
+```
 
-## Expanding the Oxlint configuration
+## Where things live
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| What | Where |
+|---|---|
+| All copy/content | `src/data/content.js` — edit text here, never in components |
+| Design tokens | `src/styles/global.css` (`@theme` + chapter vars) |
+| Motion constants | `src/lib/motion.js` — one rhythm for everything |
+| Sections (chapters) | `src/sections/` — Hero, Manifesto, Velocity, Stack, Work, Receipts, Contact |
+| Core systems | `src/components/` — SmoothScroll, Preloader, Cursor, Grain, Marquee, … |
+| Full design + rebuild spec | `../PLAN.md` — model-portable; any AI agent can rebuild this site 1:1 from it |
+| Design system notes | `DESIGN.md`, `PRODUCT.md` |
+
+## Before shipping — verify with Tej
+
+- [ ] Email: built with `parvathamtej@gmail.com` (old site had a `gmial` typo)
+- [ ] GitHub URL (`content.js` → contact.links) is a placeholder
+- [ ] Timeline years (2021–2026) in the Velocity chapter are reconstructed estimates
+- [ ] University name in "The Receipts"
+
+## Deploy
+
+Static output in `dist/`. Firebase Hosting (matches the old site), Vercel, or Netlify all work as-is.

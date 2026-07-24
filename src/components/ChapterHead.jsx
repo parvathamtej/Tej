@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { DUR_S, EASE, MM, STAGGER } from '../lib/motion'
+import { DUR_S, EASE, STAGGER } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 

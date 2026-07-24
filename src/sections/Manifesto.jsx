@@ -37,7 +37,6 @@ export default function Manifesto() {
     { scope: sectionRef },
   )
 
-  let wordIndex = 0
   return (
     <section
       ref={sectionRef}
@@ -57,7 +56,6 @@ export default function Manifesto() {
         {manifesto.segments.map((seg, s) =>
           seg.text.split(' ').map((w, i, arr) => {
             if (w === '') return null
-            wordIndex += 1
             return (
               <span
                 key={`${s}-${i}`}
