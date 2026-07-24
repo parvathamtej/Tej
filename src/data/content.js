@@ -165,5 +165,4 @@ export const contact = {
     { label: 'MORE ABOUT ME', href: 'https://tej--portfolio.web.app/' },
   ],
   credit: 'DESIGNED & BUILT WITH AN AI PAIR-PROGRAMMER',
-  marquee: "LET'S TALK ✦ ",
 }

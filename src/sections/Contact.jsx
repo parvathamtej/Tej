@@ -2,7 +2,6 @@ import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import Marquee from '../components/Marquee'
 import MagneticButton from '../components/MagneticButton'
 import { contact, identity } from '../data/content'
 import { DUR, EASE, STAGGER } from '../lib/motion'
@@ -22,6 +21,7 @@ const Line = ({ text, className = '' }) => (
 
 // Fixed footer sitting UNDER the page — the content above scrolls away like a
 // curtain lifting off it (main has margin-bottom: 100dvh to leave the room).
+// Ends on a static outline-stroked wordmark cropped by the bottom edge.
 export default function Contact() {
   const rootRef = useRef(null)
   const innerRef = useRef(null)
@@ -67,6 +67,11 @@ export default function Contact() {
     { scope: rootRef },
   )
 
+  const backToTop = (e) => {
+    e.preventDefault()
+    window.__lenis?.scrollTo(0, { duration: 1.8 })
+  }
+
   return (
     <footer ref={rootRef} className="fixed inset-x-0 bottom-0 z-[1] flex h-dvh flex-col bg-ink text-bone">
       <div ref={innerRef} className="flex flex-1 flex-col px-5 pt-24 md:px-8">
@@ -86,7 +91,7 @@ export default function Contact() {
           <Line text={contact.lineB} className="text-acid md:pl-[14vw]" />
         </h2>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-8 pb-10">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-8 pb-8">
           <MagneticButton data-cursor="SAY HI">
             <a
               href={`mailto:${identity.email}`}
@@ -107,20 +112,32 @@ export default function Contact() {
           </nav>
         </div>
 
-        <div className="ct-soft hairline-t flex flex-wrap items-center justify-between gap-3 py-4">
+        <div className="ct-soft hairline-t flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4">
           <p className="mono-label opacity-50">
             {identity.location} — {time} IST
           </p>
           <p className="mono-label opacity-50">© 2026 TEJ PRAKASH</p>
           <p className="mono-label hidden opacity-50 lg:block">{contact.credit}</p>
+          <a href="#top" onClick={backToTop} data-cursor="" className="roll mono-label">
+            <span>BACK TO TOP ↑</span>
+            <span aria-hidden="true" className="text-acid">
+              BACK TO TOP ↑
+            </span>
+          </a>
+        </div>
+
+        <div
+          aria-hidden="true"
+          className="ct-soft relative h-[0.6em] overflow-hidden text-[clamp(4.5rem,13vw,12rem)]"
+        >
+          <p
+            className="display-type absolute inset-x-0 top-0 whitespace-nowrap text-center leading-none"
+            style={{ WebkitTextStroke: '1.5px rgba(237,234,227,0.32)', color: 'transparent' }}
+          >
+            {identity.first} {identity.last}®
+          </p>
         </div>
       </div>
-      <Marquee
-        text={contact.marquee}
-        reverse
-        speed={20}
-        className="display-type hairline-t py-4 text-[clamp(1.4rem,3vw,2.4rem)] opacity-90"
-      />
     </footer>
   )
 }

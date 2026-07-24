@@ -19,13 +19,14 @@ import Contact from './sections/Contact'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Chapter color system: the page floods to warm bone for THE STACK, back to ink
-// for work. Acid stays an accent; --accent-ui swaps to olive so it reads on bone.
-const LIGHT = {
-  '--bg-page': '#edeae3',
-  '--fg-page': '#0e0e0c',
-  '--hair': 'rgba(14,14,12,0.18)',
-  '--accent-ui': '#55671a',
+// Chapter color system: for THE STACK the room shifts to deep moss — still dark,
+// but unmistakably green — and the hairlines energize with an acid tint. Back to
+// ink for work. (v1 full-acid and v2 bone floods both rejected by Tej.)
+const MOSS = {
+  '--bg-page': '#1b220a',
+  '--fg-page': '#edeae3',
+  '--hair': 'rgba(200,240,75,0.22)',
+  '--accent-ui': '#c8f04b',
 }
 const INK = {
   '--bg-page': '#0e0e0c',
@@ -67,28 +68,28 @@ export default function App() {
       ScrollTrigger.create({
         trigger: '#stack',
         start: 'top 62%',
-        onEnter: () => flood(LIGHT),
+        onEnter: () => flood(MOSS),
         onLeaveBack: () => flood(INK),
       })
       ScrollTrigger.create({
         trigger: '#work',
         start: 'top 55%',
         onEnter: () => flood(INK),
-        onLeaveBack: () => flood(LIGHT),
+        onLeaveBack: () => flood(MOSS),
       })
     })
     mm.add('(prefers-reduced-motion: reduce)', () => {
       ScrollTrigger.create({
         trigger: '#stack',
         start: 'top 62%',
-        onEnter: () => gsap.set('html', LIGHT),
+        onEnter: () => gsap.set('html', MOSS),
         onLeaveBack: () => gsap.set('html', INK),
       })
       ScrollTrigger.create({
         trigger: '#work',
         start: 'top 55%',
         onEnter: () => gsap.set('html', INK),
-        onLeaveBack: () => gsap.set('html', LIGHT),
+        onLeaveBack: () => gsap.set('html', MOSS),
       })
     })
     return () => mm.revert()
