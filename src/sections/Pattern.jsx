@@ -198,13 +198,62 @@ function addBeatVisual(tl, root, beat, at, len) {
   }
 }
 
+// ─── State content (module scope, deliberately) ─────────────────────────────
+// These MUST live outside the Pattern component. Defined inline, they get a new
+// function identity on every render, so React remounts their subtrees when App
+// re-renders (the preloader's `started` flip does exactly that) and every DOM
+// node captured by the GSAP setup goes stale. That is how the beat dots froze
+// while the counter, a plain host element, kept working.
+
+// The label slot every state shares, so the frame never changes shape
+const LabelRow = ({ company, badge }) => (
+  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <p className="mono-label opacity-70">{company}</p>
+    <span className="mono-label !text-[0.7rem] border border-[var(--accent-ui)] px-2 py-1 font-medium text-[var(--accent-ui)]">
+      {badge}
+    </span>
+  </div>
+)
+
+const BeatText = ({ pair }) => (
+  <>
+    <LabelRow company={pair.company} badge={pair.badge} />
+    <p className="display-s mt-5 max-w-[30ch]">{pair.problem}</p>
+    <p className="display-s mt-3 max-w-[30ch]">
+      {pair.solution.map((seg, s) => (
+        <span key={s} className={seg.accent ? 'text-acid' : undefined}>
+          {seg.text}
+        </span>
+      ))}
+    </p>
+  </>
+)
+
+const PayoffText = () => (
+  <>
+    <LabelRow company={pattern.payoff.company} badge={pattern.payoff.badge} />
+    <p className="display-m mt-5 max-w-[22ch] text-acid">{pattern.payoff.lead}</p>
+    <p className="deck mt-3 text-bone-dim">{pattern.payoff.line}</p>
+  </>
+)
+
+const FrozenHeading = () => (
+  <>
+    <p className="mono-label text-[var(--accent-ui)]">
+      {pattern.index} / {pattern.category}
+    </p>
+    <h2 className="display-m mt-6 max-w-[22ch]">{pattern.heading[0]}</h2>
+    <p className="deck mt-6 text-bone-dim">{pattern.deck}</p>
+  </>
+)
+
 // ─── 01 / HOW I WORK ─────────────────────────────────────────────────────────
 // The heading NEVER MOVES. It is frozen in the left column for the whole
 // section, so the reader always knows which argument they are inside, and the
 // counter and dots say how much of it is left. Only the right column advances:
-// company, badge, the sentence pair and the visual swap together as one unit.
-// State 4 resolves the right column to the payoff, so the conclusion lands in
-// the same place the evidence did instead of on a screen of its own.
+// company, badge, the sentence pair and the visual swap together as one unit,
+// inside ONE bordered card so it reads as a single object changing state (the
+// QuitCrap perspective-shift frame). State 4 resolves the card to the payoff.
 export default function Pattern() {
   const rootRef = useRef(null)
   const deskRef = useRef(null)
@@ -223,10 +272,8 @@ export default function Pattern() {
       mm.add(MM.desk, () => {
         if (!deskRef.current || !pinRef.current) return
         const q = gsap.utils.selector(deskRef.current)
-        const panels = q('.pt-panel') // 3 beats + payoff
+        const panels = q('.pt-panel') // 3 beats + payoff. Host elements: stable.
         const visuals = q('.pt-visual')
-        const dots = dotsRef.current ? [...dotsRef.current.children] : []
-        const counter = counterRef.current
 
         // The states are absolutely positioned so they share one origin, which
         // leaves the stage with no natural height. Size it to the TALLEST state
@@ -267,15 +314,19 @@ export default function Pattern() {
               overwrite: 'auto',
             }),
           )
-          dots.forEach((d, i) => {
-            d.textContent = i <= idx ? '●' : '○'
-            d.classList.toggle('text-acid', i <= idx)
-          })
+          // Read dots and counter LIVE at call time, never captured: React can
+          // replace these nodes on a re-render, and writes to captured stale
+          // nodes vanish silently. That is the bug that froze the dots.
+          const dotEls = dotsRef.current?.children ?? []
+          for (let i = 0; i < dotEls.length; i++) {
+            dotEls[i].textContent = i <= idx ? '●' : '○'
+            dotEls[i].classList.toggle('text-acid', i <= idx)
+          }
+          const counter = counterRef.current
           if (counter) {
             const isPayoff = idx >= pattern.pairs.length
-            counter.textContent = isPayoff
-              ? ''
-              : `0${idx + 1} / 0${pattern.pairs.length}`
+            counter.textContent = isPayoff ? '' : `0${idx + 1} / 0${pattern.pairs.length}`
+            counter.style.visibility = isPayoff ? 'hidden' : 'visible'
           }
           current = idx
         }
@@ -333,97 +384,54 @@ export default function Pattern() {
     { scope: rootRef },
   )
 
-  // The frozen column. Rendered once for desktop, once for the mobile header.
-  const Frozen = ({ withDots }) => (
-    <>
-      <p className="mono-label text-[var(--accent-ui)]">
-        {pattern.index} / {pattern.category}
-      </p>
-      <h2 className="display-m mt-6 max-w-[22ch]">{pattern.heading[0]}</h2>
-      <p className="deck mt-6 text-bone-dim">{pattern.deck}</p>
-      {withDots ? (
-        <p ref={dotsRef} aria-hidden="true" className="mono-label mt-12 flex gap-3">
-          {pattern.pairs.map((p, i) => (
-            <span key={p.company} className={i === 0 ? 'text-acid' : ''}>
-              {i === 0 ? '●' : '○'}
-            </span>
-          ))}
-        </p>
-      ) : null}
-    </>
-  )
-
-  // The label slot every state shares, so the frame never changes shape
-  const LabelRow = ({ company, badge }) => (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <p className="mono-label opacity-70">{company}</p>
-      <span className="mono-label !text-[0.7rem] border border-[var(--accent-ui)] px-2 py-1 font-medium text-[var(--accent-ui)]">
-        {badge}
-      </span>
-    </div>
-  )
-
-  const BeatText = ({ pair }) => (
-    <>
-      <LabelRow company={pair.company} badge={pair.badge} />
-      <p className="display-s mt-5 max-w-[30ch]">{pair.problem}</p>
-      <p className="display-s mt-3 max-w-[30ch]">
-        {pair.solution.map((seg, s) => (
-          <span key={s} className={seg.accent ? 'text-acid' : undefined}>
-            {seg.text}
-          </span>
-        ))}
-      </p>
-    </>
-  )
-
-  const Payoff = () => (
-    <>
-      <LabelRow company={pattern.payoff.company} badge={pattern.payoff.badge} />
-      <p className="display-m mt-5 max-w-[22ch] text-acid">{pattern.payoff.lead}</p>
-      <p className="deck mt-3 text-bone-dim">{pattern.payoff.line}</p>
-    </>
-  )
-
   return (
     <section id="pattern" ref={rootRef} className="relative z-[5] bg-ink">
-      {/* Desktop: the whole section pins. Nothing scrolls away. */}
+      {/* Desktop: the whole section pins. Everything fits ONE viewport frame:
+          the card flexes, the visual absorbs the remainder (no hard floor that
+          can push the frame past the fold, which is how the forty-field grid
+          got cut at laptop heights). */}
       <div ref={pinRef} className="hidden h-dvh md:block">
         <div
           ref={deskRef}
-          className="grid h-full grid-cols-[38%_62%] gap-12 px-8 pb-12 pt-[7.5rem]"
+          className="grid h-full grid-cols-[38%_1fr] gap-10 px-8 pb-8 pt-24"
         >
           {/* Frozen for the entire section */}
           <div className="flex flex-col justify-center">
-            <Frozen withDots />
+            <FrozenHeading />
+            <p ref={dotsRef} aria-hidden="true" className="mono-label mt-12 flex gap-3">
+              {pattern.pairs.map((p, i) => (
+                <span key={p.company} className={i === 0 ? 'text-acid' : ''}>
+                  {i === 0 ? '●' : '○'}
+                </span>
+              ))}
+            </p>
           </div>
 
-          {/* Advances: one unit of company, badge, sentences and visual */}
-          <div className="flex min-h-0 flex-col">
+          {/* One bordered card: the changing states read as a single object
+              swapping content, with the counter chip inside its frame. */}
+          <div className="relative flex min-h-0 flex-col border border-[var(--hair)] bg-[rgba(237,234,227,0.02)] p-6 lg:p-8">
             <p
               ref={counterRef}
               aria-hidden="true"
-              className="mono-label shrink-0 self-end text-[var(--accent-ui)]"
+              className="mono-label absolute right-6 top-6 text-[var(--accent-ui)] lg:right-8 lg:top-8"
             >
               01 / 0{pattern.pairs.length}
             </p>
 
-            {/* The text stage takes exactly the height its tallest state needs
-                and NEVER clips: `overflow-y-auto` here hid the last line of the
-                GlobalLogic beat (205px of copy in a 186px box) with no scrollbar
-                to signal it. The visual takes the remainder and keeps a floor. */}
-            <div ref={stageRef} className="relative mt-4 shrink-0">
+            {/* Text stage: exactly the height of its tallest state, never clips */}
+            <div ref={stageRef} className="relative shrink-0 pr-20">
               {pattern.pairs.map((pair) => (
                 <div key={pair.company} className="pt-panel absolute inset-x-0 top-0">
                   <BeatText pair={pair} />
                 </div>
               ))}
               <div className="pt-panel absolute inset-x-0 top-0">
-                <Payoff />
+                <PayoffText />
               </div>
             </div>
 
-            <div className="relative mt-8 min-h-[440px] flex-1 overflow-hidden border border-[var(--hair)]">
+            {/* Visual: takes whatever the viewport leaves, inside the card */}
+            <div className="relative mt-6 min-h-[240px] flex-1 overflow-hidden border border-[var(--hair)] bg-ink">
               {VISUALS.map((V, i) => (
                 <div key={i} className="pt-visual absolute inset-0">
                   <V />
@@ -434,9 +442,13 @@ export default function Pattern() {
         </div>
       </div>
 
+      {/* Breathing room before the next chapter: without it the released frame
+          and the arriving dossier share the screen with no separation. */}
+      <div aria-hidden="true" className="hidden h-[28vh] md:block" />
+
       {/* Mobile: no pin, the frozen column becomes a static header */}
       <div className="px-5 pb-16 pt-16 md:hidden">
-        <Frozen />
+        <FrozenHeading />
         {pattern.pairs.map((pair, i) => {
           const V = VISUALS[i]
           return (
@@ -451,7 +463,7 @@ export default function Pattern() {
           )
         })}
         <div ref={payoffMobRef} className="pt-panel pt-4">
-          <Payoff />
+          <PayoffText />
         </div>
       </div>
     </section>

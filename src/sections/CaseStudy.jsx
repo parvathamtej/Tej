@@ -24,7 +24,8 @@ function Card({ card }) {
   const [preview, rest] = splitPreview(card.paras)
   const bodyId = `cs-body-${card.key}`
   return (
-    <article className="cs-card flex flex-col border border-[var(--hair)] p-6 md:h-full md:w-full md:flex-none md:overflow-y-auto md:p-9">
+    <article data-lenis-prevent
+      className="cs-card no-scrollbar flex flex-col border border-[var(--hair)] p-6 md:h-full md:w-full md:flex-none md:overflow-y-auto md:p-9">
       {card.heading ? (
         <h3 className="display-m max-w-[33ch] text-[var(--accent-ui)]">
           {card.heading}
@@ -176,7 +177,7 @@ export default function CaseStudy({ study }) {
         }`}
       >
         {/* Left rail: the chapter heading and the persistent reference */}
-        <aside className="cs-rail flex flex-col gap-4 md:overflow-y-auto md:pr-4">
+        <aside className="cs-rail no-scrollbar flex flex-col gap-4 md:overflow-y-auto md:pr-4">
           <p className="mono-label text-[var(--accent-ui)]">
             {study.index} / {study.category}
           </p>
@@ -254,6 +255,10 @@ export default function CaseStudy({ study }) {
           </div>
         )}
       </div>
+
+      {/* Seam: a released pin and the next arriving chapter must not share the
+          screen with zero separation. */}
+      {!single ? <div aria-hidden="true" className="hidden h-[18vh] md:block" /> : null}
     </section>
   )
 }

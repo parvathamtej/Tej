@@ -168,6 +168,18 @@ body {
   border-top: 1px solid var(--hair);
 }
 
+/* Internal scroll areas must never show a scrollbar: Windows Chrome renders a
+   bright track inside overflow containers (it appeared as a fat white bar
+   between the dossier rail and its stage). Pair with data-lenis-prevent so the
+   wheel still works inside pinned sections. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ─── Textures and chapter material ───────────────────────────────────────
    The slate chapter gets a fine dot matrix so the flood is a material change
    as well as a colour one. */
