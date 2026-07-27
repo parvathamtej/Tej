@@ -15,19 +15,21 @@ import Pattern from './sections/Pattern'
 import CaseStudy from './sections/CaseStudy'
 import Stack from './sections/Stack'
 import Work from './sections/Work'
-import Receipts from './sections/Receipts'
+import Credentials from './sections/Credentials'
 import Contact from './sections/Contact'
-import { caseStudies, chapters } from './data/content'
+import SectionHeading from './components/SectionHeading'
+import { caseStudies, chapters, experienceDivider } from './data/content'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Chapter color system: for THE STACK the room shifts to deep moss — still dark,
-// but unmistakably green — and the hairlines energize with an acid tint. Back to
-// ink for work. (v1 full-acid and v2 bone floods both rejected by Tej.)
-const MOSS = {
-  '--bg-page': '#1b220a',
+// Chapter color system: for the skills chapter the room shifts to a cool deep
+// slate. Cool makes the acid accent pop harder than any warm colour can, and it
+// stays inside the dark world so the transition still reads as a different room.
+// (Flood history: full-acid, bone and moss all rejected; slate is final.)
+const SLATE = {
+  '--bg-page': '#131a24',
   '--fg-page': '#edeae3',
-  '--hair': 'rgba(200,240,75,0.22)',
+  '--hair': 'rgba(237,234,227,0.16)',
   '--accent-ui': '#c8f04b',
 }
 const INK = {
@@ -75,28 +77,28 @@ export default function App() {
       ScrollTrigger.create({
         trigger: '#stack',
         start: 'top 62%',
-        onEnter: () => flood(MOSS),
+        onEnter: () => flood(SLATE),
         onLeaveBack: () => flood(INK),
       })
       ScrollTrigger.create({
         trigger: '#work',
         start: 'top 55%',
         onEnter: () => flood(INK),
-        onLeaveBack: () => flood(MOSS),
+        onLeaveBack: () => flood(SLATE),
       })
     })
     mm.add('(prefers-reduced-motion: reduce)', () => {
       ScrollTrigger.create({
         trigger: '#stack',
         start: 'top 62%',
-        onEnter: () => gsap.set('html', MOSS),
+        onEnter: () => gsap.set('html', SLATE),
         onLeaveBack: () => gsap.set('html', INK),
       })
       ScrollTrigger.create({
         trigger: '#work',
         start: 'top 55%',
         onEnter: () => gsap.set('html', INK),
-        onLeaveBack: () => gsap.set('html', MOSS),
+        onLeaveBack: () => gsap.set('html', SLATE),
       })
     })
     return () => mm.revert()
@@ -117,12 +119,24 @@ export default function App() {
       >
         <Hero started={started} />
         <Pattern />
+        {/* Mode change: a reader crossing from the Pattern into a dossier needs
+            to be told the site has switched from argument to evidence. A <div>,
+            not a <section>, so chapter enumeration is unaffected. */}
+        <div className="flex min-h-[60dvh] items-center px-5 md:px-8">
+          <SectionHeading
+            index={experienceDivider.index}
+            category={experienceDivider.category}
+            heading={experienceDivider.heading}
+            deck={experienceDivider.deck}
+            size="xl"
+          />
+        </div>
         {caseStudies.map((study) => (
           <CaseStudy key={study.id} study={study} />
         ))}
         <Stack />
         <Work />
-        <Receipts />
+        <Credentials />
       </main>
       <Contact />
     </SmoothScroll>

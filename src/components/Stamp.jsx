@@ -16,18 +16,22 @@ export default function Stamp({ text, className = '', variant = 'chip' }) {
 
   useGSAP(
     () => {
+      // Capture and guard: matchMedia callbacks can re-run on viewport change
+      // after the ref has detached, and dereferencing it then crashes the tree.
+      const el = ref.current
+      if (!el) return
       const mm = gsap.matchMedia()
       mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.to(ref.current, {
+        gsap.to(el, {
           duration: 1.1,
           ease: 'none',
           scrambleText: { text, chars: GLYPHS, speed: 0.5 },
-          scrollTrigger: { trigger: ref.current, start: 'top 88%', once: true },
+          scrollTrigger: { trigger: el, start: 'top 88%', once: true },
         })
-        const row = ref.current.closest('li')
+        const row = el.closest('li')
         if (!row) return
         const rescramble = () =>
-          gsap.to(ref.current, {
+          gsap.to(el, {
             duration: 0.6,
             ease: 'none',
             scrambleText: { text, chars: GLYPHS, speed: 0.6 },

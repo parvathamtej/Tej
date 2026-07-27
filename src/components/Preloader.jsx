@@ -62,7 +62,7 @@ export default function Preloader({ onDone }) {
       className="fixed inset-0 z-[300] flex items-center justify-center bg-ink text-bone"
       style={{ clipPath: 'inset(0% 0% 0% 0%)' }}
     >
-      <h2 className="display-type display-caps flex flex-wrap justify-center gap-x-[0.28em] px-4 text-[clamp(2.4rem,8vw,7.5rem)]" aria-label={NAME}>
+      <h2 className="display-l flex flex-wrap justify-center gap-x-[0.28em] px-4" aria-label={NAME}>
         {NAME.split(' ').map((word, w) => (
           <span key={w} className="inline-flex overflow-hidden">
             {word.split('').map((c, i) => (
@@ -78,7 +78,7 @@ export default function Preloader({ onDone }) {
       </p>
       <p
         ref={counterRef}
-        className="pre-meta display-type absolute bottom-5 right-5 text-[clamp(1.6rem,4vw,3rem)] text-acid md:right-8"
+        className="pre-meta display-m absolute bottom-5 right-5 text-acid md:right-8"
       >
         000
       </p>

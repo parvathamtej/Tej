@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import ChapterHead from '../components/ChapterHead'
+import SectionHeading from '../components/SectionHeading'
 import Stamp from '../components/Stamp'
 import { work } from '../data/content'
 import { DUR_S, EASE, MM } from '../lib/motion'
@@ -92,18 +92,33 @@ export default function Work() {
 
   return (
     <section id="work" ref={sectionRef} className="px-5 py-[clamp(6rem,14vh,10rem)] md:px-8">
-      <ChapterHead index={work.index} label={work.label} title={work.title} />
+      <SectionHeading
+        index={work.index}
+        category={work.category}
+        heading={work.heading}
+        deck={work.deck}
+        className="mb-14"
+      />
       <ul>
         {work.projects.map((p) => (
           <li
             key={p.index}
             data-cursor="VIEW"
-            className="work-row group hairline-t -mx-3 grid grid-cols-[2.5rem_1fr] items-baseline gap-x-4 gap-y-2 px-3 py-8 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:grid-cols-[3.5rem_1fr_auto] md:py-10"
+            className="work-row group hairline-t -mx-3 grid grid-cols-[2.5rem_1fr] items-baseline gap-x-4 gap-y-2 px-3 py-8 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:py-10"
           >
             <p className="mono-label text-acid group-hover:text-[var(--bg-page)]">{p.index}</p>
             <div>
-              <h3 className="display-type text-[clamp(1.5rem,3.4vw,2.9rem)]">{p.name}</h3>
-              <p className="prose-measure mt-3 text-bone-dim group-hover:text-[var(--bg-page)]">
+              {/* Name and status on one line: the eye picks up both together */}
+              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+                <h3 className="display-m" style={{ '--wdth': 108 }}>
+                  {p.name}
+                </h3>
+                <span className="flex shrink-0 items-baseline gap-3">
+                  <span className="mono-label opacity-70">{p.year}</span>
+                  <Stamp text={p.status} />
+                </span>
+              </div>
+              <p className="body-copy mt-3 text-bone-dim group-hover:text-[var(--bg-page)]">
                 {p.desc}
               </p>
               {p.href ? (
@@ -112,15 +127,11 @@ export default function Work() {
                   target="_blank"
                   rel="noreferrer"
                   data-cursor="OPEN"
-                  className="mono-label !normal-case mt-4 inline-block opacity-60 underline-offset-4 hover:underline hover:opacity-100"
+                  className="mono-label !normal-case mt-4 inline-block opacity-70 underline-offset-4 hover:underline hover:opacity-100"
                 >
                   → {p.hrefLabel}
                 </a>
               ) : null}
-            </div>
-            <div className="col-start-2 flex items-baseline gap-3 md:col-start-3 md:self-start">
-              <span className="mono-label opacity-60">{p.year}</span>
-              <Stamp text={p.status} />
             </div>
           </li>
         ))}

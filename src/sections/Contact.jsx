@@ -29,6 +29,11 @@ export default function Contact() {
 
   useGSAP(
     () => {
+      // The footer is revealed by the page lifting off it, so its triggers key
+      // off main's bottom edge. Resolve the element once and guard: a string
+      // selector warns and silently detaches if it resolves before mount.
+      const main = document.querySelector('.site-main')
+      if (!main || !innerRef.current) return
       const mm = gsap.matchMedia()
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.fromTo(
@@ -37,12 +42,7 @@ export default function Contact() {
           {
             yPercent: 0,
             ease: 'none',
-            scrollTrigger: {
-              trigger: '.site-main',
-              start: 'bottom bottom',
-              end: 'bottom top',
-              scrub: 1,
-            },
+            scrollTrigger: { trigger: main, start: 'bottom bottom', end: 'bottom top', scrub: 1 },
           },
         )
         gsap.from('.ct-char', {
@@ -50,7 +50,7 @@ export default function Contact() {
           duration: DUR,
           ease: EASE,
           stagger: STAGGER / 1.5,
-          scrollTrigger: { trigger: '.site-main', start: 'bottom 55%', once: true },
+          scrollTrigger: { trigger: main, start: 'bottom 55%', once: true },
         })
         gsap.from('.ct-soft', {
           opacity: 0,
@@ -58,7 +58,7 @@ export default function Contact() {
           duration: 0.8,
           ease: EASE,
           stagger: 0.08,
-          scrollTrigger: { trigger: '.site-main', start: 'bottom 60%', once: true },
+          scrollTrigger: { trigger: main, start: 'bottom 60%', once: true },
         })
       })
       return () => mm.revert()
@@ -83,7 +83,7 @@ export default function Contact() {
         </div>
 
         <h2
-          className="display-type display-caps mt-auto text-[clamp(4rem,15vw,13.5rem)]"
+          className="display-xl mt-auto"
           aria-label={`${contact.lineA} ${contact.lineB}`}
         >
           <Line text={contact.lineA} />

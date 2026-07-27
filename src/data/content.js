@@ -28,18 +28,31 @@ export const preloader = {
   tagline: 'LOADING · INTERNAL SYSTEMS',
 }
 
-// Bottom HUD bar. Order must match the sections rendered in App.jsx.
+// Bottom HUD bar and chapter rail. Order must match the sections in App.jsx.
+// These stay company-specific (unlike the section kickers, which mark the three
+// experience chapters as one run) because the HUD and rail are navigation: a
+// reader needs to know WHICH chapter they are in, not just its category.
 export const chapters = [
   '00 / INTRO',
-  '01 / THE PATTERN',
+  '01 / HOW I WORK',
   '02 / ARRIVIO',
   '03 / GLOBALLOGIC',
   '04 / HANSI',
-  '05 / THE STACK',
-  '06 / SELECTED WORK',
-  '07 / THE RECEIPTS',
+  '05 / SKILLS',
+  '06 / PROJECTS',
+  '07 / BACKGROUND',
   '08 / SAY HI',
 ]
+
+// The divider that announces the run of three experience chapters. Without it
+// a reader crosses from the Pattern into a dossier with no signal that the
+// site has changed mode.
+export const experienceDivider = {
+  index: '02',
+  category: 'EXPERIENCE',
+  heading: ['THE WORK'],
+  deck: 'Three companies. What I built at each, and what it replaced.',
+}
 
 export const availability = 'OPEN TO OPPORTUNITIES'
 
@@ -48,9 +61,12 @@ export const availability = 'OPEN TO OPPORTUNITIES'
 // solution line lands a beat later. `accent` renders acid + italic.
 export const pattern = {
   index: '01',
-  label: 'THE PATTERN',
+  category: 'HOW I WORK',
+  heading: ['THREE COMPANIES.', 'THE SAME PROBLEM.'],
+  deck: 'Every one of them had somebody doing by hand what a system should have been doing.',
   pairs: [
     {
+      id: 'HANSI KITCHENS · 2023 · INTERIOR VISUALISATION',
       problem: 'Hansi could not show a client the room they were paying for.',
       solution: [
         { text: 'So I ' },
@@ -59,6 +75,7 @@ export const pattern = {
       ],
     },
     {
+      id: 'GLOBALLOGIC · 2026 · DEALER MANAGEMENT SYSTEM',
       problem: 'GlobalLogic had advisors filling forty fields to book one car.',
       solution: [
         { text: 'So I ' },
@@ -67,6 +84,7 @@ export const pattern = {
       ],
     },
     {
+      id: 'ARRIVIO · 2026 · DEMAND MODELLING',
       problem: 'Arrivio could not see which market to enter next.',
       solution: [
         { text: 'So I ' },
@@ -110,6 +128,9 @@ export const caseStudies = [
     id: 'arrivio',
     index: '02',
     label: 'ARRIVIO',
+    category: 'EXPERIENCE',
+    heading: ['ARRIVIO'],
+    deck: 'Founding engineer. Housing for people relocating internationally.',
     title: 'FOUNDING ENGINEER',
     meta: 'Arrivio · January 2026 to present · Remote, Berlin',
     stamp: 'STATUS: CURRENT',
@@ -155,6 +176,9 @@ export const caseStudies = [
     id: 'globallogic',
     index: '03',
     label: 'GLOBALLOGIC',
+    category: 'EXPERIENCE',
+    heading: ['GLOBALLOGIC'],
+    deck: 'Engineering intern, Hitachi Group. A dealer management system for vehicle rental.',
     title: 'ENGINEERING INTERN',
     meta: 'GlobalLogic, a Hitachi Group company · November 2025 to June 2026 · Hyderabad',
     intro: [
@@ -169,7 +193,9 @@ export const caseStudies = [
           'I mapped what actually existed, named a single source of truth for each concern, and rebuilt it against that. Pricing became one deterministic function. Availability became pure booking overlap logic in the database instead of a hybrid of real queries and UI flags. Quotations got a real state machine.',
           'Generating a quote used to be an insert, then a six-attempt polling loop, then a frontend fallback for when the database never answered. It is now a calculation and one write.',
         ],
-        quoteAfter: true,
+        // The site's best sentence. It closes the card it belongs to, in
+        // context, rather than costing a whole screen on its own.
+        closer: 'Double booking stopped being a bug we fixed and became something the system cannot do.',
       },
       {
         heading: 'THEN I DESIGNED THE AGENT',
@@ -181,7 +207,6 @@ export const caseStudies = [
         ],
       },
     ],
-    quote: 'Double booking stopped being a bug we fixed and became something the system cannot do.',
     stats: ['9 TABLES', '6 ANALYTICS SURFACES', '3 SPRINTS', '2 ENGINEERS', '80% LESS DATA ENTRY'],
     tech: [
       'Angular', 'TypeScript', 'Supabase', 'PostgreSQL', 'RLS', 'SCSS',
@@ -192,6 +217,9 @@ export const caseStudies = [
     id: 'hansi',
     index: '04',
     label: 'HANSI',
+    category: 'EXPERIENCE',
+    heading: ['HANSI KITCHENS'],
+    deck: 'Systems developer. Interior visualisation, built at nineteen.',
     title: 'SYSTEMS DEVELOPER',
     meta: 'Hansi Kitchens · 2023',
     stamp: 'NDA · NO SCREENSHOTS',
@@ -209,8 +237,9 @@ export const caseStudies = [
 // No ratings, no percentages, no proficiency bars. Ever.
 export const stack = {
   index: '05',
-  label: 'THE STACK',
-  title: 'WHAT I REACH FOR',
+  category: 'SKILLS',
+  heading: ['WHAT I REACH FOR'],
+  deck: 'And what I actually do with it.',
   rows: [
     { label: 'LANGUAGES', items: 'Python · TypeScript · JavaScript · Java · SQL' },
     {
@@ -232,8 +261,9 @@ export const stack = {
 // Honest labels. Inflated ones next to the Arrivio chapter would poison it.
 export const work = {
   index: '06',
-  label: 'SELECTED WORK',
-  title: 'EVERYTHING ELSE',
+  category: 'PROJECTS',
+  heading: ['OTHER THINGS I’VE BUILT'],
+  deck: 'Side projects, hackathons and coursework, labelled honestly.',
   projects: [
     {
       index: '01',
@@ -272,18 +302,39 @@ export const work = {
   ],
 }
 
-// ── 07 / THE RECEIPTS ────────────────────────────────────────────────────────
-// A footnote, not a trophy case. No display title by design.
-export const receipts = {
+// ── 07 / BACKGROUND ──────────────────────────────────────────────────────────
+// Three clearly separated blocks under one heading. Nothing below 14px here:
+// this section failed on legibility before it failed on anything else.
+export const credentials = {
   index: '07',
-  label: 'THE RECEIPTS',
-  rows: [
-    { label: 'B.TECH · CSE, AI & ML', detail: 'Malla Reddy College of Engineering & Technology · 2026' },
-    { label: 'AWS ACADEMY GRADUATE', detail: 'Machine Learning Foundations' },
-    { label: 'DEEPLEARNING.AI', detail: 'AI For Everyone' },
-    { label: 'INFOSYS', detail: 'Generative AI · Deep Learning for Developers · AI Primer' },
-    { label: 'LANGUAGES', detail: 'Telugu · Hindi · English · Japanese' },
-  ],
+  category: 'BACKGROUND',
+  heading: ['EDUCATION AND CERTIFICATIONS'],
+  deck: 'The paperwork.',
+  education: {
+    label: 'EDUCATION',
+    degree: 'B.Tech, Computer Science Engineering',
+    focus: 'Artificial Intelligence and Machine Learning',
+    school: 'Malla Reddy College of Engineering and Technology · 2026',
+  },
+  certifications: {
+    label: 'CERTIFICATIONS',
+    rows: [
+      { issuer: 'AWS Academy Graduate', name: 'Machine Learning Foundations' },
+      { issuer: 'DeepLearning.AI', name: 'AI For Everyone' },
+      { issuer: 'Infosys', name: 'Principles of Generative AI' },
+      { issuer: 'Infosys', name: 'Deep Learning for Developers' },
+      { issuer: 'Infosys', name: 'Artificial Intelligence Primer' },
+    ],
+  },
+  languages: {
+    label: 'LANGUAGES',
+    rows: [
+      { issuer: 'Telugu', name: 'Native' },
+      { issuer: 'Hindi', name: 'Native' },
+      { issuer: 'English', name: 'Professional' },
+      { issuer: 'Japanese', name: 'Limited working' },
+    ],
+  },
 }
 
 // ── 08 / SAY HI ──────────────────────────────────────────────────────────────

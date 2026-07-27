@@ -97,7 +97,7 @@ export default function Navbar() {
               key={l.label}
               href={l.target === 'bottom' ? '#contact' : l.target}
               onClick={(e) => go(e, l.target)}
-              className="display-type display-caps py-2 text-[clamp(1.8rem,7vw,3rem)] transition-colors duration-200 hover:text-acid"
+              className="display-l py-2 transition-colors duration-200 hover:text-acid"
             >
               <span className="mono-label mr-4 text-acid">0{i + 1}</span>
               {l.label}

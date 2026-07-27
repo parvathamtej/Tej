@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin'
+import SectionHeading from '../components/SectionHeading'
 import { pattern, patternVisuals } from '../data/content'
 import { EASE, MM, SCRAMBLE_CHARS, mulberry32 } from '../lib/motion'
 
@@ -10,8 +11,7 @@ gsap.registerPlugin(useGSAP, ScrollTrigger, ScrambleTextPlugin)
 
 // ─── Beat 1 · Hansi: before/after wipe ───────────────────────────────────────
 // The software he built at Hansi shows a client the finished room before it is
-// built, so this interaction performs the sentence it accompanies. The divider
-// tracks scroll progress; GSAP drives .pv-wipe (clip) and .pv-divider (x).
+// built, so this interaction performs the sentence it accompanies.
 function VisualHansi() {
   const v = patternVisuals.hansi
   const layer = (src, cls) =>
@@ -27,42 +27,37 @@ function VisualHansi() {
         {layer(v.afterSrc, 'ph-after')}
       </div>
       <div className="pv-divider absolute inset-y-0 left-0 w-px bg-acid" />
-      <p className="mono-label absolute bottom-4 left-4 opacity-60">{v.beforeLabel}</p>
+      <p className="mono-label absolute bottom-4 left-4 opacity-70">{v.beforeLabel}</p>
       <p className="mono-label absolute bottom-4 right-4 text-acid">{v.afterLabel}</p>
     </div>
   )
 }
 
 // ─── Beat 2 · GlobalLogic: forty fields collapsing into one line ─────────────
-// Schematic only: outlined rectangles arranged as the five wizard screens.
-// GSAP staggers .pv-field down into the input row, then reveals the sentence.
 function VisualGlobalLogic() {
   const v = patternVisuals.globallogic
-  const rand = useMemo(() => {
+  const drift = useMemo(() => {
     const r = mulberry32(41)
-    return Array.from({ length: v.fieldCount }, () => r())
+    return Array.from({ length: v.fieldCount }, () => Math.round(r() * 40 - 20))
   }, [v.fieldCount])
   return (
-    <div className="relative flex h-full w-full flex-col justify-center gap-8 p-6 md:p-10">
-      <div className="grid grid-cols-5 gap-x-5 gap-y-0">
+    <div className="relative flex h-full w-full flex-col justify-center gap-8 p-6 md:p-8">
+      <div className="grid grid-cols-5 gap-x-4 gap-y-0">
         {Array.from({ length: v.screens }, (_, s) => (
           <div key={s} className="flex flex-col gap-2">
-            <p className="mono-label mb-1 opacity-60">0{s + 1}</p>
-            {Array.from({ length: v.fieldCount / v.screens }, (_, f) => {
-              const i = s * (v.fieldCount / v.screens) + f
-              return (
-                <div
-                  key={f}
-                  className="pv-field field-cell h-5 w-full"
-                  data-drift={Math.round(rand[i] * 40 - 20)}
-                />
-              )
-            })}
+            <p className="mono-label mb-1 opacity-70">0{s + 1}</p>
+            {Array.from({ length: v.fieldCount / v.screens }, (_, f) => (
+              <div
+                key={f}
+                className="pv-field field-cell h-5 w-full"
+                data-drift={drift[s * (v.fieldCount / v.screens) + f]}
+              />
+            ))}
           </div>
         ))}
       </div>
       <div className="pv-input hairline-t relative pt-4" style={{ opacity: 0 }}>
-        <p className="mono-label !normal-case flex items-baseline text-[0.85rem]">
+        <p className="mono-label !normal-case flex items-baseline !text-[0.8rem]">
           <span className="mr-2 text-acid">&gt;</span>
           <span
             className="pv-sentence inline-block whitespace-nowrap"
@@ -78,8 +73,7 @@ function VisualGlobalLogic() {
 }
 
 // ─── Beat 3 · Arrivio: a demand field blooming ───────────────────────────────
-// Generated hexagonal density grid, deterministic weights, no real data and no
-// client positions. Labelled ILLUSTRATIVE because the real system is internal.
+// Generated, deterministic, no real data and no client positions.
 const HEX_COLS = 13
 const HEX_ROWS = 8
 const FOCUS = { x: 0.62, y: 0.42 }
@@ -99,12 +93,11 @@ function buildHexes() {
   return cells
 }
 
-function hexPoints(cx, cy, r) {
-  return Array.from({ length: 6 }, (_, i) => {
+const hexPoints = (cx, cy, r) =>
+  Array.from({ length: 6 }, (_, i) => {
     const a = (Math.PI / 3) * i + Math.PI / 6
     return `${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`
   }).join(' ')
-}
 
 function VisualArrivio() {
   const cells = useMemo(buildHexes, [])
@@ -117,19 +110,17 @@ function VisualArrivio() {
   return (
     <div className="relative h-full w-full">
       <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" aria-hidden="true">
-        <g>
-          {dots.map((d, i) => (
-            <circle
-              key={i}
-              className="pv-dot"
-              cx={40 + d.x * (W - 80)}
-              cy={30 + d.y * (H - 60)}
-              r="1.6"
-              fill="#EDEAE3"
-              opacity="0.5"
-            />
-          ))}
-        </g>
+        {dots.map((d, i) => (
+          <circle
+            key={i}
+            className="pv-dot"
+            cx={40 + d.x * (W - 80)}
+            cy={30 + d.y * (H - 60)}
+            r="1.6"
+            fill="#EDEAE3"
+            opacity="0.5"
+          />
+        ))}
         <circle
           className="pv-radius"
           cx={40 + FOCUS.x * (W - 80)}
@@ -140,32 +131,31 @@ function VisualArrivio() {
           strokeOpacity="0.35"
           opacity="0"
         />
-        <g>
-          {cells.map((c, i) => (
-            <polygon
-              key={i}
-              className="pv-hex"
-              data-weight={c.weight.toFixed(2)}
-              data-dist={c.dist.toFixed(3)}
-              points={hexPoints(40 + c.x * (W - 80), 30 + c.y * (H - 60), 16)}
-              fill="#C8F04B"
-              stroke="#C8F04B"
-              strokeOpacity="0.25"
-              opacity="0"
-            />
-          ))}
-        </g>
+        {cells.map((c, i) => (
+          <polygon
+            key={i}
+            className="pv-hex"
+            data-weight={c.weight.toFixed(2)}
+            data-dist={c.dist.toFixed(3)}
+            points={hexPoints(40 + c.x * (W - 80), 30 + c.y * (H - 60), 16)}
+            fill="#C8F04B"
+            stroke="#C8F04B"
+            strokeOpacity="0.25"
+            opacity="0"
+          />
+        ))}
       </svg>
-      <p className="mono-label absolute bottom-4 right-4 opacity-60">
+      <p className="mono-label absolute bottom-4 right-4 opacity-70">
         {patternVisuals.arrivio.label}
       </p>
     </div>
   )
 }
 
-// ─── Shared beat choreography ────────────────────────────────────────────────
-// One timeline builder used by both the pinned desktop split and the stacked
-// mobile blocks, so the two layouts cannot drift apart.
+const VISUALS = [VisualHansi, VisualGlobalLogic, VisualArrivio]
+
+// Scrubbed visual choreography, shared by the pinned desktop split and the
+// stacked mobile blocks so the two layouts cannot drift apart.
 function addBeatVisual(tl, root, beat, at, len) {
   const q = gsap.utils.selector(root)
   if (beat === 0) {
@@ -173,9 +163,8 @@ function addBeatVisual(tl, root, beat, at, len) {
     tl.fromTo(q('.pv-divider'), { left: '0%' }, { left: '100%', ease: 'none', duration: len }, at)
   }
   if (beat === 1) {
-    const fields = q('.pv-field')
     tl.to(
-      fields,
+      q('.pv-field'),
       {
         y: (i, el) => 260 + Number(el.dataset.drift),
         opacity: 0,
@@ -194,9 +183,8 @@ function addBeatVisual(tl, root, beat, at, len) {
     )
   }
   if (beat === 2) {
-    const hexes = q('.pv-hex')
     tl.to(q('.pv-dot'), { opacity: 0, duration: len * 0.3, stagger: (len * 0.2) / 56 }, at)
-    hexes.forEach((hex) => {
+    q('.pv-hex').forEach((hex) => {
       tl.to(
         hex,
         { opacity: Number(hex.dataset.weight), duration: len * 0.25, ease: EASE },
@@ -212,60 +200,78 @@ function addBeatVisual(tl, root, beat, at, len) {
   }
 }
 
-const VISUALS = [VisualHansi, VisualGlobalLogic, VisualArrivio]
-
-// ─── 01 / THE PATTERN ────────────────────────────────────────────────────────
-// Pinned split screen: left 42% advances the sentence pairs one beat at a
-// time, right 58% carries a visual that proves each sentence. Scroll drives
-// both. No blank viewports anywhere.
+// ─── 01 / HOW I WORK ─────────────────────────────────────────────────────────
 export default function Pattern() {
   const rootRef = useRef(null)
+  const deskRef = useRef(null)
   const pinRef = useRef(null)
   const payoffRef = useRef(null)
 
   useGSAP(
     () => {
-      const q = gsap.utils.selector(rootRef.current)
-
-      const buildBeats = (tl) => {
-        const SEG = 1 // one unit of timeline time per beat
-        pattern.pairs.forEach((_, i) => {
-          const at = i * SEG
-          const pairEl = q('.pt-pair')[i]
-          const visEl = q('.pt-visual')[i]
-          if (i > 0) {
-            // previous beat out, this beat in
-            tl.to(q('.pt-pair')[i - 1], { autoAlpha: 0, y: -36, duration: 0.16, ease: EASE }, at - 0.08)
-            tl.to(q('.pt-visual')[i - 1], { autoAlpha: 0, duration: 0.16 }, at - 0.08)
-            tl.fromTo(pairEl, { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.16, ease: EASE }, at)
-            tl.fromTo(visEl, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.16 }, at)
-          }
-          addBeatVisual(tl, visEl, i, at + 0.1, SEG - 0.24)
-        })
-      }
-
       const mm = gsap.matchMedia()
 
       mm.add(MM.desk, () => {
-        gsap.set(q('.pt-pair'), { autoAlpha: (i) => (i === 0 ? 1 : 0) })
-        gsap.set(q('.pt-visual'), { autoAlpha: (i) => (i === 0 ? 1 : 0) })
+        // Scope to the desktop grid: the mobile layout renders its own copies
+        // of these classes, and a document-wide selector would mix them.
+        if (!deskRef.current || !pinRef.current) return
+        const q = gsap.utils.selector(deskRef.current)
+        const pairs = q('.pt-pair')
+        const visuals = q('.pt-visual')
+        const n = pairs.length
+
+        // Visibility is discrete and derived from progress every frame, never
+        // from tweens inside the scrubbed timeline. Exactly one beat can be
+        // visible, at any scroll position, in either direction.
+        gsap.set(pairs, { autoAlpha: 0, y: 28 })
+        gsap.set(visuals, { autoAlpha: 0 })
+        gsap.set([pairs[0], visuals[0]], { autoAlpha: 1, y: 0 })
+
+        let current = 0
+        const show = (idx) => {
+          if (idx === current) return
+          pairs.forEach((el, i) => {
+            gsap.to(el, {
+              autoAlpha: i === idx ? 1 : 0,
+              y: i === idx ? 0 : i < idx ? -28 : 28,
+              duration: 0.4,
+              ease: EASE,
+              overwrite: 'auto',
+            })
+          })
+          visuals.forEach((el, i) => {
+            gsap.to(el, {
+              autoAlpha: i === idx ? 1 : 0,
+              duration: 0.4,
+              ease: EASE,
+              overwrite: 'auto',
+            })
+          })
+          current = idx
+        }
+
+        // The scrubbed timeline carries ONLY the visual animations.
         const tl = gsap.timeline({
           scrollTrigger: {
-            trigger: rootRef.current,
+            // The pinned stage is the trigger, not the section: the heading
+            // block above must scroll away before the pin engages.
+            trigger: pinRef.current,
             start: 'top top',
             end: '+=300%',
             scrub: 1,
             pin: pinRef.current,
             pinSpacing: true,
             invalidateOnRefresh: true,
+            onUpdate: (self) =>
+              show(gsap.utils.clamp(0, n - 1, Math.floor(self.progress * n))),
           },
         })
-        buildBeats(tl)
+        tl.set({}, {}, n) // hold the full duration
+        for (let i = 0; i < n; i++) addBeatVisual(tl, visuals[i], i, i + 0.08, 0.84)
       })
 
       mm.add(MM.mob, () => {
-        // Stacked blocks, each visual scrubbed through its own passage
-        q('.pt-beat').forEach((block, i) => {
+        gsap.utils.toArray(rootRef.current.querySelectorAll('.pt-beat')).forEach((block, i) => {
           const tl = gsap.timeline({
             scrollTrigger: { trigger: block, start: 'top 75%', end: 'bottom 45%', scrub: 1 },
           })
@@ -274,9 +280,9 @@ export default function Pattern() {
       })
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
-        // Payoff: the machine finishing its thought. Slow, once.
+        if (!payoffRef.current) return
         gsap
-          .timeline({ scrollTrigger: { trigger: payoffRef.current, start: 'top 60%', once: true } })
+          .timeline({ scrollTrigger: { trigger: payoffRef.current, start: 'top 65%', once: true } })
           .to(payoffRef.current.querySelector('.pt-lead'), {
             duration: 2.4,
             ease: 'none',
@@ -290,7 +296,9 @@ export default function Pattern() {
       })
 
       mm.add(MM.reduce, () => {
-        // Plain vertical document: every pair and visual visible at end state
+        // A plain vertical document: every beat visible, nothing pinned.
+        if (!rootRef.current) return
+        const q = gsap.utils.selector(rootRef.current)
         gsap.set(q('.pt-pair, .pt-visual, .pv-input'), { autoAlpha: 1, y: 0 })
         gsap.set(q('.pv-wipe, .pv-sentence'), { clipPath: 'inset(0% 0% 0% 0%)' })
         gsap.set(q('.pv-divider'), { left: '50%' })
@@ -303,39 +311,49 @@ export default function Pattern() {
     { scope: rootRef },
   )
 
-  const Pair = ({ pair, className = '' }) => (
-    <div className={className}>
-      <p className="display-type text-[clamp(1.5rem,2.4vw,2.5rem)]" style={{ textWrap: 'pretty' }}>
-        {pair.problem}
-      </p>
-      <p className="display-type mt-4 text-[clamp(1.5rem,2.4vw,2.5rem)]" style={{ textWrap: 'pretty' }}>
+  const Pair = ({ pair }) => (
+    <>
+      <p className="display-m">{pair.problem}</p>
+      <p className="display-m mt-4">
         {pair.solution.map((seg, s) => (
-          <span key={s} className={seg.accent ? 'serif-accent text-acid' : undefined}>
+          <span key={s} className={seg.accent ? 'text-acid' : undefined}>
             {seg.text}
           </span>
         ))}
       </p>
-    </div>
+      <p className="mono-label mt-8 opacity-60">{pair.id}</p>
+    </>
   )
 
   return (
     <section id="pattern" ref={rootRef} className="relative z-[5] bg-ink">
-      {/* Desktop: pinned split screen */}
+      {/* Heading in normal document flow: a reader sees what this section is
+          before the beats start. It scrolls away before the pin engages. */}
+      <div className="px-5 pb-16 pt-28 md:px-8 md:pb-24 md:pt-32">
+        <SectionHeading
+          index={pattern.index}
+          category={pattern.category}
+          heading={pattern.heading}
+          deck={pattern.deck}
+          size="xl"
+        />
+      </div>
+
+      {/* Desktop: pinned split screen. Top padding clears the fixed navbar and
+          both columns clip, so outgoing lines can never render through it. */}
       <div ref={pinRef} className="hidden h-dvh md:block">
-        <div className="flex items-baseline justify-between px-8 pt-24">
-          <p className="mono-label">
-            <span className="text-acid">[{pattern.index}]</span>
-            <span className="ml-3 opacity-60">{pattern.label}</span>
-          </p>
-          <p className="mono-label opacity-60">KEEP SCROLLING</p>
-        </div>
-        <div className="grid h-[calc(100dvh-8.5rem)] grid-cols-[42%_58%] gap-8 px-8 pb-8 pt-6">
-          <div className="relative">
-            {pattern.pairs.map((pair, i) => (
-              <Pair key={i} pair={pair} className="pt-pair absolute inset-x-0 top-1/2 -translate-y-1/2" />
+        <div ref={deskRef} className="grid h-full grid-cols-[42%_58%] gap-10 px-8 pb-12 pt-[7.5rem]">
+          <div className="relative overflow-hidden">
+            {pattern.pairs.map((pair) => (
+              <div
+                key={pair.id}
+                className="pt-pair absolute inset-0 flex flex-col items-start justify-center will-change-transform"
+              >
+                <Pair pair={pair} />
+              </div>
             ))}
           </div>
-          <div className="relative">
+          <div className="relative overflow-hidden">
             {VISUALS.map((V, i) => (
               <div key={i} className="pt-visual absolute inset-0">
                 <V />
@@ -346,16 +364,14 @@ export default function Pattern() {
       </div>
 
       {/* Mobile: stacked beats, no pin */}
-      <div className="px-5 pt-24 md:hidden">
-        <p className="mono-label">
-          <span className="text-acid">[{pattern.index}]</span>
-          <span className="ml-3 opacity-60">{pattern.label}</span>
-        </p>
+      <div className="px-5 md:hidden">
         {pattern.pairs.map((pair, i) => {
           const V = VISUALS[i]
           return (
-            <div key={i} className="pt-beat py-14">
-              <Pair pair={pair} className="pt-pair" />
+            <div key={pair.id} className="pt-beat py-12">
+              <div className="pt-pair">
+                <Pair pair={pair} />
+              </div>
               <div className="pt-visual relative mt-8 h-[46vh] overflow-hidden border border-[var(--hair)]">
                 <V />
               </div>
@@ -364,12 +380,13 @@ export default function Pattern() {
         })}
       </div>
 
-      {/* Payoff: own screen, centred */}
-      <div ref={payoffRef} className="flex min-h-dvh flex-col items-center justify-center px-5 text-center md:px-8">
-        <p className="pt-lead display-type text-[clamp(2.4rem,6vw,5.4rem)] text-acid">
-          {pattern.payoff.lead}
-        </p>
-        <p className="pt-payoff-line display-type mt-6 block max-w-[30ch] overflow-hidden pb-[0.12em] -mb-[0.12em] text-[clamp(1.4rem,2.6vw,2.4rem)]">
+      {/* Payoff: its own screen */}
+      <div
+        ref={payoffRef}
+        className="flex min-h-dvh flex-col items-center justify-center px-5 text-center md:px-8"
+      >
+        <p className="pt-lead display-l text-acid">{pattern.payoff.lead}</p>
+        <p className="pt-payoff-line display-m mt-6 block max-w-[26ch] overflow-hidden pb-[0.1em] -mb-[0.1em]">
           <span className="inline-block will-change-transform">{pattern.payoff.line}</span>
         </p>
       </div>

@@ -72,10 +72,7 @@ export default function Hero({ started }) {
   return (
     <section ref={sectionRef} id="top" className="relative flex min-h-dvh flex-col">
       <div ref={innerRef} className="flex flex-1 flex-col px-5 pt-28 md:px-8">
-        <h1
-          className="display-type display-caps mt-auto text-[clamp(3.5rem,13vw,11rem)]"
-          aria-label={name}
-        >
+        <h1 className="display-xl mt-auto" aria-label={name}>
           <span className="block overflow-hidden pb-[0.08em] -mb-[0.08em]">
             {name.split('').map((c, i) => (
               <span key={i} className="hero-char inline-block will-change-transform" aria-hidden="true">
@@ -95,7 +92,7 @@ export default function Hero({ started }) {
         </h1>
 
         <div className="mt-10 pb-16">
-          <div className="hero-soft prose-measure text-[clamp(1.15rem,1.7vw,1.6rem)]">
+          <div className="hero-soft deck">
             {identity.statement.map((line) => (
               <span key={line} className="block">
                 {line}
