@@ -44,15 +44,10 @@ export const chapters = [
   '08 / SAY HI',
 ]
 
-// The divider that announces the run of three experience chapters. Without it
-// a reader crosses from the Pattern into a dossier with no signal that the
-// site has changed mode.
-export const experienceDivider = {
-  index: '02',
-  category: 'EXPERIENCE',
-  heading: ['THE WORK'],
-  deck: 'Three companies. What I built at each, and what it replaced.',
-}
+// (The V7 "THE WORK" divider is deleted. The HUD and chapter rail already tell
+// the reader they have moved into a new chapter, and the dossier's own rail
+// carries the company name. A separate announcement screen was the same
+// information a third time.)
 
 export const availability = 'OPEN TO OPPORTUNITIES'
 
@@ -62,7 +57,11 @@ export const availability = 'OPEN TO OPPORTUNITIES'
 export const pattern = {
   index: '01',
   category: 'HOW I WORK',
-  heading: ['THREE COMPANIES.', 'THE SAME PROBLEM.'],
+  // Sentence case: caps strip the ascender and descender shapes readers use to
+  // recognise words, and the penalty grows with size. Caps are kept only for
+  // one and two word headings, kickers, labels, the HUD, chips and tags.
+  heading: ['Three companies. The same problem.'],
+  // The one deck that survives: it explains a heading that cannot stand alone.
   deck: 'Every one of them had somebody doing by hand what a system should have been doing.',
   pairs: [
     {
@@ -129,10 +128,10 @@ export const caseStudies = [
     index: '02',
     label: 'ARRIVIO',
     category: 'EXPERIENCE',
-    heading: ['ARRIVIO'],
-    deck: 'Founding engineer. Housing for people relocating internationally.',
-    title: 'FOUNDING ENGINEER',
-    meta: 'Arrivio · January 2026 to present · Remote, Berlin',
+    heading: 'ARRIVIO',
+    title: 'Founding Engineer',
+    // Company name removed: the rail heading directly above already carries it
+    meta: 'January 2026 to present · Remote, Berlin',
     stamp: 'STATUS: CURRENT',
     intro: [
       'I am the first engineer at Arrivio and I built the engineering function. I hired the team of six that runs it, set the architecture everything is built on, and own the technical direction of the product.',
@@ -177,10 +176,9 @@ export const caseStudies = [
     index: '03',
     label: 'GLOBALLOGIC',
     category: 'EXPERIENCE',
-    heading: ['GLOBALLOGIC'],
-    deck: 'Engineering intern, Hitachi Group. A dealer management system for vehicle rental.',
-    title: 'ENGINEERING INTERN',
-    meta: 'GlobalLogic, a Hitachi Group company · November 2025 to June 2026 · Hyderabad',
+    heading: 'GLOBALLOGIC',
+    title: 'Engineering Intern',
+    meta: 'A Hitachi Group company · November 2025 to June 2026 · Hyderabad',
     intro: [
       'Two engineers, three sprints, a dealer management system for vehicle rental operators, demoed to business stakeholders at the end of every sprint.',
       'I owned fleet inventory, the availability engine, quotation pricing, the booking flow, pre-trip inspection and return settlement. Nine tables, six analytics surfaces, two user roles.',
@@ -218,10 +216,9 @@ export const caseStudies = [
     index: '04',
     label: 'HANSI',
     category: 'EXPERIENCE',
-    heading: ['HANSI KITCHENS'],
-    deck: 'Systems developer. Interior visualisation, built at nineteen.',
-    title: 'SYSTEMS DEVELOPER',
-    meta: 'Hansi Kitchens · 2023',
+    heading: 'HANSI KITCHENS',
+    title: 'Systems Developer',
+    meta: '2023 · Hyderabad',
     stamp: 'NDA · NO SCREENSHOTS',
     intro: [
       'Interior fit-out has an expensive communication problem. A client approves a drawing, pictures something slightly different in their head, and finds the gap when the work is half built. By then the change costs real money and real weeks.',
@@ -238,8 +235,7 @@ export const caseStudies = [
 export const stack = {
   index: '05',
   category: 'SKILLS',
-  heading: ['WHAT I REACH FOR'],
-  deck: 'And what I actually do with it.',
+  heading: ['What I reach for.'],
   rows: [
     { label: 'LANGUAGES', items: 'Python · TypeScript · JavaScript · Java · SQL' },
     {
@@ -262,8 +258,7 @@ export const stack = {
 export const work = {
   index: '06',
   category: 'PROJECTS',
-  heading: ['OTHER THINGS I’VE BUILT'],
-  deck: 'Side projects, hackathons and coursework, labelled honestly.',
+  heading: ['Other things I’ve built.'],
   projects: [
     {
       index: '01',
@@ -308,8 +303,7 @@ export const work = {
 export const credentials = {
   index: '07',
   category: 'BACKGROUND',
-  heading: ['EDUCATION AND CERTIFICATIONS'],
-  deck: 'The paperwork.',
+  heading: ['Education and certifications.'],
   education: {
     label: 'EDUCATION',
     degree: 'B.Tech, Computer Science Engineering',

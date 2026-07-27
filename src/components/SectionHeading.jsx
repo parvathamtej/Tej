@@ -3,27 +3,23 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DUR, EASE, STAGGER } from '../lib/motion'
+import { MEASURE, stepForLength } from '../lib/type'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Every section opens with this, full width, before any content: a numbered
-// kicker (the chapter language the HUD already uses), a heading in plain words
-// a stranger understands, and one sentence of context. No section may open
-// with content before its heading, and no heading may live in a corner.
+// Kicker, heading, and (by exception only) a deck. The step is assigned from
+// the heading's character count, never chosen by hand.
 //
-// widthAxis: the three experience headings animate Archivo's wdth axis on
-// entry, 100 to 125. It is the run's signature move, and it exists only
-// because the typeface has a real width axis.
-export default function SectionHeading({
-  index,
-  category,
-  heading,
-  deck,
-  size = 'l',
-  widthAxis = false,
-  className = '',
-}) {
+// A deck earns its place only when the heading cannot stand alone. If it can be
+// deleted without losing information, it is deleted: decorative decks that
+// restate the heading are padding.
+//
+// Spacing follows the 8px scale: kicker to heading 24, heading to deck 24,
+// heading or deck to first content 64 (applied by the caller).
+export default function SectionHeading({ index, category, heading, deck, className = '' }) {
   const rootRef = useRef(null)
+  const lines = Array.isArray(heading) ? heading : [heading]
+  const step = stepForLength(lines)
 
   useGSAP(
     () => {
@@ -40,14 +36,8 @@ export default function SectionHeading({
             { yPercent: 108, duration: DUR, ease: EASE, stagger: STAGGER },
             '-=0.35',
           )
-          .from('.sh-deck', { opacity: 0, y: 14, duration: 0.7, ease: EASE }, '-=0.5')
-        if (widthAxis) {
-          tl.fromTo(
-            root.querySelector('.sh-heading'),
-            { '--wdth': 100 },
-            { '--wdth': 125, duration: 0.9, ease: EASE },
-            '-=0.95',
-          )
+        if (deck) {
+          tl.from('.sh-deck', { opacity: 0, y: 14, duration: 0.7, ease: EASE }, '-=0.5')
         }
       })
       return () => mm.revert()
@@ -55,15 +45,13 @@ export default function SectionHeading({
     { scope: rootRef },
   )
 
-  const Size = size === 'xl' ? 'display-xl' : 'display-l'
-
   return (
     <header ref={rootRef} className={`w-full ${className}`}>
       <p className="sh-kicker mono-label text-[var(--accent-ui)]">
         {index} / {category}
       </p>
-      <h2 className={`sh-heading ${Size} mt-5 max-w-[18ch]`}>
-        {heading.map((line) => (
+      <h2 className={`sh-heading ${step} ${MEASURE[step]} mt-6`}>
+        {lines.map((line) => (
           <span key={line} className="sh-line block overflow-hidden pb-[0.06em] -mb-[0.06em]">
             <span className="inline-block will-change-transform">{line}</span>
           </span>

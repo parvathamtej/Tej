@@ -91,13 +91,12 @@ export default function Work() {
   )
 
   return (
-    <section id="work" ref={sectionRef} className="px-5 py-[clamp(6rem,14vh,10rem)] md:px-8">
+    <section id="work" ref={sectionRef} className="px-5 py-16 md:px-8 md:py-32">
       <SectionHeading
         index={work.index}
         category={work.category}
         heading={work.heading}
-        deck={work.deck}
-        className="mb-14"
+        className="mb-16"
       />
       <ul>
         {work.projects.map((p) => (
@@ -110,7 +109,7 @@ export default function Work() {
             <div>
               {/* Name and status on one line: the eye picks up both together */}
               <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <h3 className="display-m" style={{ '--wdth': 108 }}>
+                <h3 className="display-m max-w-[22ch]">
                   {p.name}
                 </h3>
                 <span className="flex shrink-0 items-baseline gap-3">

@@ -17,27 +17,23 @@ import Stack from './sections/Stack'
 import Work from './sections/Work'
 import Credentials from './sections/Credentials'
 import Contact from './sections/Contact'
-import SectionHeading from './components/SectionHeading'
-import { caseStudies, chapters, experienceDivider } from './data/content'
+import { caseStudies, chapters } from './data/content'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Chapter color system: for the skills chapter the room shifts to a cool deep
-// slate. Cool makes the acid accent pop harder than any warm colour can, and it
-// stays inside the dark world so the transition still reads as a different room.
-// (Flood history: full-acid, bone and moss all rejected; slate is final.)
-const SLATE = {
-  '--bg-page': '#131a24',
-  '--fg-page': '#edeae3',
-  '--hair': 'rgba(237,234,227,0.16)',
-  '--accent-ui': '#c8f04b',
-}
+// The skills chapter changes MATERIAL, not hue: the background stays ink and
+// only the dot matrix fades in. Every hue attempted was worse than none
+// (full-acid, bone, moss and slate were all rejected in turn), and a texture
+// change with no colour change is the more sophisticated version of the same
+// transition. Timing and mechanic are unchanged; only the target is.
 const INK = {
   '--bg-page': '#0e0e0c',
   '--fg-page': '#edeae3',
   '--hair': 'rgba(237,234,227,0.14)',
   '--accent-ui': '#c8f04b',
 }
+const TEXTURE_ON = 1
+const TEXTURE_OFF = 0
 
 export default function App() {
   const [started, setStarted] = useState(false)
@@ -71,36 +67,30 @@ export default function App() {
     })
 
     const mm = gsap.matchMedia()
-    mm.add('(prefers-reduced-motion: no-preference)', () => {
-      const flood = (vars) =>
-        gsap.to('html', { ...vars, duration: 0.7, ease: 'power2.out', overwrite: 'auto' })
+    const texture = (on, instant) => {
+      const el = document.querySelector('.chapter-texture')
+      if (!el) return
+      const v = on ? TEXTURE_ON : TEXTURE_OFF
+      if (instant) gsap.set(el, { opacity: v })
+      else gsap.to(el, { opacity: v, duration: 0.7, ease: 'power2.out', overwrite: 'auto' })
+    }
+    const wire = (instant) => {
+      gsap.set('html', INK)
       ScrollTrigger.create({
         trigger: '#stack',
         start: 'top 62%',
-        onEnter: () => flood(SLATE),
-        onLeaveBack: () => flood(INK),
+        onEnter: () => texture(true, instant),
+        onLeaveBack: () => texture(false, instant),
       })
       ScrollTrigger.create({
         trigger: '#work',
         start: 'top 55%',
-        onEnter: () => flood(INK),
-        onLeaveBack: () => flood(SLATE),
+        onEnter: () => texture(false, instant),
+        onLeaveBack: () => texture(true, instant),
       })
-    })
-    mm.add('(prefers-reduced-motion: reduce)', () => {
-      ScrollTrigger.create({
-        trigger: '#stack',
-        start: 'top 62%',
-        onEnter: () => gsap.set('html', SLATE),
-        onLeaveBack: () => gsap.set('html', INK),
-      })
-      ScrollTrigger.create({
-        trigger: '#work',
-        start: 'top 55%',
-        onEnter: () => gsap.set('html', INK),
-        onLeaveBack: () => gsap.set('html', SLATE),
-      })
-    })
+    }
+    mm.add('(prefers-reduced-motion: no-preference)', () => wire(false))
+    mm.add('(prefers-reduced-motion: reduce)', () => wire(true))
     return () => mm.revert()
   })
 
@@ -119,18 +109,6 @@ export default function App() {
       >
         <Hero started={started} />
         <Pattern />
-        {/* Mode change: a reader crossing from the Pattern into a dossier needs
-            to be told the site has switched from argument to evidence. A <div>,
-            not a <section>, so chapter enumeration is unaffected. */}
-        <div className="flex min-h-[60dvh] items-center px-5 md:px-8">
-          <SectionHeading
-            index={experienceDivider.index}
-            category={experienceDivider.category}
-            heading={experienceDivider.heading}
-            deck={experienceDivider.deck}
-            size="xl"
-          />
-        </div>
         {caseStudies.map((study) => (
           <CaseStudy key={study.id} study={study} />
         ))}

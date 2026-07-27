@@ -41,21 +41,20 @@ export default function Credentials() {
     <section
       id="receipts"
       ref={sectionRef}
-      className="px-5 pb-[clamp(7rem,16vh,11rem)] pt-[clamp(4rem,9vh,6rem)] md:px-8"
+      className="px-5 pb-24 pt-16 md:px-8 md:pb-40 md:pt-32"
     >
       <SectionHeading
         index={credentials.index}
         category={credentials.category}
         heading={credentials.heading}
-        deck={credentials.deck}
-        className="mb-14"
+        className="mb-16"
       />
 
       <div className="cr-blocks flex flex-col gap-12">
         <div className="cr-block">
           <p className={LABEL}>{education.label}</p>
           <div className="mt-5 border-t border-[var(--hair)] pt-5">
-            <p className="display-m" style={{ '--wdth': 106 }}>
+            <p className="display-m max-w-[22ch]">
               {education.degree}
             </p>
             <p className="body-copy mt-2 text-bone-dim">{education.focus}</p>

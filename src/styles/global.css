@@ -89,24 +89,32 @@ body {
 }
 
 /* ─── TYPE SCALE. Nothing on the site sits outside this. ───────────────────
-   Width and weight go through custom properties so GSAP can animate the wdth
-   axis (the experience headings) without fighting the utility. */
+   SIZE FOLLOWS LENGTH, NOT IMPORTANCE. A step is a measure of how much text
+   there is, not how much it matters: at 144px a sentence wraps to three lines
+   and swallows a viewport while a wordmark sits on one line and looks right.
+   Assign by character count (see lib/type.js), never by eye.
+     1-12 chars  → display-xl      29-55 chars → display-m
+     13-28 chars → display-l       56+ chars   → display-s
+
+   WIDTH IS LOCKED AT 100. Archivo's axis runs to 125, and on a name (a shape
+   the reader already knows) expansion reads as distortion, not style. Impact
+   comes from weight and size only. Do not reintroduce a wdth override. */
 @utility display-xl {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(3.5rem, 9vw, 9rem);
-  letter-spacing: -0.03em;
-  line-height: 0.92;
-  font-variation-settings: "wdth" var(--wdth, 125), "wght" var(--wght, 800);
+  font-size: clamp(3rem, 7vw, 7rem);
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  font-variation-settings: "wdth" 100, "wght" 800;
 }
 
 @utility display-l {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2.5rem, 5.5vw, 5rem);
+  font-size: clamp(2.25rem, 4.5vw, 4rem);
   letter-spacing: -0.02em;
-  line-height: 1;
-  font-variation-settings: "wdth" var(--wdth, 118), "wght" var(--wght, 700);
+  line-height: 1.02;
+  font-variation-settings: "wdth" 100, "wght" 700;
 }
 
 @utility display-m {
@@ -114,16 +122,30 @@ body {
   font-weight: 700;
   font-size: clamp(1.75rem, 3vw, 2.75rem);
   letter-spacing: -0.01em;
-  line-height: 1.1;
-  font-variation-settings: "wdth" var(--wdth, 112), "wght" var(--wght, 700);
+  line-height: 1.12;
+  font-variation-settings: "wdth" 100, "wght" 700;
 }
 
+@utility display-s {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.375rem, 2vw, 2rem);
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+  font-variation-settings: "wdth" 100, "wght" 700;
+}
+
+/* MEASURE IS CALIBRATED, NOT NOMINAL. The `ch` unit is the width of "0", and
+   in Satoshi that glyph is 0.68em while the average character in running prose
+   is 0.41em. A nominal `68ch` therefore renders about 113 characters per line,
+   not 68. These values are set from measured characters-per-line (target band
+   50 to 75) and must be re-measured if the body face ever changes. */
 @utility deck {
   font-family: var(--font-body);
   font-weight: 400;
   font-size: clamp(1.125rem, 1.6vw, 1.5rem);
   line-height: 1.45;
-  max-width: 62ch;
+  max-width: 38ch; /* measures ~59 characters */
 }
 
 @utility body-copy {
@@ -131,7 +153,7 @@ body {
   font-weight: 400;
   font-size: clamp(1rem, 1.1vw, 1.125rem);
   line-height: 1.6;
-  max-width: 68ch;
+  max-width: 40ch; /* measures ~66 characters */
 }
 
 @utility mono-label {
@@ -154,12 +176,18 @@ body {
   background-size: 4px 4px;
 }
 
-/* ─── Stack rows: focus the hovered row, draw an acid hairline under it ──── */
-.stack-list:hover .stack-row {
-  opacity: 0.4;
+/* ─── Stack rows: focus the hovered row, draw an acid hairline under it ────
+   :has() is load-bearing. A plain `.stack-list:hover` dims every row whenever
+   the cursor is anywhere over the list, including the gaps and the empty space
+   beside the text, so resting the mouse near the list washed all seven rows out
+   to 3.36:1 and made the values unreadable. Dim only when a row is genuinely
+   hovered, and only to 60% (5.97:1), never 40%. */
+.stack-list:has(.stack-row:hover) .stack-row,
+.stack-list:has(.stack-row:focus-visible) .stack-row {
+  opacity: 0.6;
 }
 .stack-list .stack-row:hover,
-.stack-list .stack-row:focus-within {
+.stack-list .stack-row:focus-visible {
   opacity: 1;
 }
 .stack-row {

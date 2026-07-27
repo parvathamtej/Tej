@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import SectionHeading from '../components/SectionHeading'
 import Stamp from '../components/Stamp'
 import { DUR_S, EASE, MM, STAGGER, reduced } from '../lib/motion'
 
@@ -27,7 +26,7 @@ function Card({ card }) {
   return (
     <article className="cs-card flex flex-col border border-[var(--hair)] p-6 md:h-full md:w-full md:flex-none md:overflow-y-auto md:p-9">
       {card.heading ? (
-        <h3 className="display-m text-[var(--accent-ui)]" style={{ '--wdth': 108 }}>
+        <h3 className="display-m max-w-[33ch] text-[var(--accent-ui)]">
           {card.heading}
         </h3>
       ) : null}
@@ -62,7 +61,7 @@ function Card({ card }) {
       {/* The card's conclusion. Stays visible whether the card is open or not:
           it is the argument, and it should never sit behind an interaction. */}
       {card.closer ? (
-        <p className="display-m mt-8 max-w-[24ch] text-acid" style={{ '--wdth': 106 }}>
+        <p className="display-s mt-8 max-w-[30ch] text-acid">
           {card.closer}
         </p>
       ) : null}
@@ -166,28 +165,23 @@ export default function CaseStudy({ study }) {
 
   return (
     <section id={study.id} ref={rootRef} className="relative">
-      <div className="px-5 pb-14 pt-24 md:px-8 md:pb-20 md:pt-28">
-        <SectionHeading
-          index={study.index}
-          category={study.category}
-          heading={study.heading}
-          deck={study.deck}
-          size="xl"
-          widthAxis
-        />
-      </div>
-
+      {/* No standalone company heading and no divider screen. The rail below IS
+          the chapter heading: the reader is already looking there, and the HUD
+          and chapter rail have already said a new chapter began. A separate
+          announcement was the same information a second time, one screen early. */}
       <div
         ref={pinRef}
-        className={`grid grid-cols-1 gap-8 px-5 pb-10 pt-4 md:grid-cols-[32%_1fr] md:px-8 motion-reduce:!h-auto ${
-          single ? 'min-h-[70dvh] content-center' : 'md:h-dvh md:pt-24'
+        className={`grid grid-cols-1 gap-8 px-5 pb-16 pt-16 md:grid-cols-[32%_1fr] md:gap-12 md:px-8 md:pb-16 md:pt-32 motion-reduce:!h-auto ${
+          single ? 'min-h-[70dvh] content-center' : 'md:h-dvh'
         }`}
       >
-        {/* Left rail: the persistent reference while the stage moves */}
+        {/* Left rail: the chapter heading and the persistent reference */}
         <aside className="cs-rail flex flex-col gap-4 md:overflow-y-auto md:pr-4">
-          <h3 className="display-m" style={{ '--wdth': 106 }}>
-            {study.title}
-          </h3>
+          <p className="mono-label text-[var(--accent-ui)]">
+            {study.index} / {study.category}
+          </p>
+          <h2 className="display-l">{study.heading}</h2>
+          <h3 className="display-m max-w-[22ch]">{study.title}</h3>
           <p className="mono-label !normal-case opacity-70">{study.meta}</p>
           {study.stamp ? (
             <div>

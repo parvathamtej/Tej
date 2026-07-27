@@ -36,16 +36,20 @@ export default function Stack() {
     <section
       id="stack"
       ref={sectionRef}
-      className="relative px-5 py-[clamp(5rem,12vh,8rem)] md:px-8"
+      className="relative px-5 py-16 md:px-8 md:py-32"
     >
-      <div className="dot-matrix pointer-events-none absolute inset-0" aria-hidden="true" />
+      {/* The chapter's material change. App fades this in with the same timing
+          the colour flood used; the background hue never changes. */}
+      <div
+        className="chapter-texture dot-matrix pointer-events-none absolute inset-0 opacity-0"
+        aria-hidden="true"
+      />
       <div className="relative">
         <SectionHeading
           index={stack.index}
           category={stack.category}
           heading={stack.heading}
-          deck={stack.deck}
-          className="mb-14"
+          className="mb-16"
         />
         <ul className="stack-list">
           {stack.rows.map((row) => (
@@ -64,7 +68,7 @@ export default function Stack() {
             className="stack-row hairline-t grid grid-cols-1 items-baseline gap-2 py-8 md:grid-cols-[11rem_1fr] md:gap-6 md:py-10"
           >
             <p className="mono-label text-[var(--accent-ui)]">{stack.closer.heading}</p>
-            <p className="display-m max-w-[20ch] text-acid" style={{ '--wdth': 108 }}>
+            <p className="display-s max-w-[30ch] text-acid">
               {stack.closer.line}
             </p>
           </li>

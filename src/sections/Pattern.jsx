@@ -2,12 +2,11 @@ import { useMemo, useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin'
 import SectionHeading from '../components/SectionHeading'
 import { pattern, patternVisuals } from '../data/content'
-import { EASE, MM, SCRAMBLE_CHARS, mulberry32 } from '../lib/motion'
+import { DUR, EASE, MM, mulberry32 } from '../lib/motion'
 
-gsap.registerPlugin(useGSAP, ScrollTrigger, ScrambleTextPlugin)
+gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 // ─── Beat 1 · Hansi: before/after wipe ───────────────────────────────────────
 // The software he built at Hansi shows a client the finished room before it is
@@ -227,6 +226,12 @@ export default function Pattern() {
         gsap.set(visuals, { autoAlpha: 0 })
         gsap.set([pairs[0], visuals[0]], { autoAlpha: 1, y: 0 })
 
+        // The payoff lands at the bottom of this column once the third beat has
+        // resolved, rather than owning a centred screen of its own. It occupies
+        // its space from the start (visibility, not display) so nothing reflows.
+        const payoff = q('.pt-payoff')[0]
+        gsap.set(payoff, { autoAlpha: 0 })
+
         let current = 0
         const show = (idx) => {
           if (idx === current) return
@@ -249,6 +254,8 @@ export default function Pattern() {
           })
           current = idx
         }
+        const showPayoff = (on) =>
+          gsap.to(payoff, { autoAlpha: on ? 1 : 0, duration: 0.5, ease: EASE, overwrite: 'auto' })
 
         // The scrubbed timeline carries ONLY the visual animations.
         const tl = gsap.timeline({
@@ -262,8 +269,10 @@ export default function Pattern() {
             pin: pinRef.current,
             pinSpacing: true,
             invalidateOnRefresh: true,
-            onUpdate: (self) =>
-              show(gsap.utils.clamp(0, n - 1, Math.floor(self.progress * n))),
+            onUpdate: (self) => {
+              show(gsap.utils.clamp(0, n - 1, Math.floor(self.progress * n)))
+              showPayoff(self.progress > 0.9)
+            },
           },
         })
         tl.set({}, {}, n) // hold the full duration
@@ -279,27 +288,23 @@ export default function Pattern() {
         })
       })
 
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
+      mm.add(MM.mob, () => {
+        // No pin on mobile, so the payoff simply reveals after the last beat.
         if (!payoffRef.current) return
-        gsap
-          .timeline({ scrollTrigger: { trigger: payoffRef.current, start: 'top 65%', once: true } })
-          .to(payoffRef.current.querySelector('.pt-lead'), {
-            duration: 2.4,
-            ease: 'none',
-            scrambleText: { text: pattern.payoff.lead, chars: SCRAMBLE_CHARS, speed: 0.35 },
-          })
-          .from(
-            payoffRef.current.querySelector('.pt-payoff-line span'),
-            { yPercent: 110, duration: 0.9, ease: EASE },
-            '-=0.3',
-          )
+        gsap.from(payoffRef.current, {
+          autoAlpha: 0,
+          y: 20,
+          duration: DUR,
+          ease: EASE,
+          scrollTrigger: { trigger: payoffRef.current, start: 'top 85%', once: true },
+        })
       })
 
       mm.add(MM.reduce, () => {
         // A plain vertical document: every beat visible, nothing pinned.
         if (!rootRef.current) return
         const q = gsap.utils.selector(rootRef.current)
-        gsap.set(q('.pt-pair, .pt-visual, .pv-input'), { autoAlpha: 1, y: 0 })
+        gsap.set(q('.pt-pair, .pt-visual, .pv-input, .pt-payoff'), { autoAlpha: 1, y: 0 })
         gsap.set(q('.pv-wipe, .pv-sentence'), { clipPath: 'inset(0% 0% 0% 0%)' })
         gsap.set(q('.pv-divider'), { left: '50%' })
         q('.pv-hex').forEach((h) => gsap.set(h, { opacity: Number(h.dataset.weight) }))
@@ -311,10 +316,13 @@ export default function Pattern() {
     { scope: rootRef },
   )
 
+  // The pair is one typographic unit, so it is sized by its LONGEST line
+  // (61 characters), which the length table puts at display-s. Sizing the two
+  // lines independently would split a single thought across two steps.
   const Pair = ({ pair }) => (
     <>
-      <p className="display-m">{pair.problem}</p>
-      <p className="display-m mt-4">
+      <p className="display-s max-w-[30ch]">{pair.problem}</p>
+      <p className="display-s mt-6 max-w-[30ch]">
         {pair.solution.map((seg, s) => (
           <span key={s} className={seg.accent ? 'text-acid' : undefined}>
             {seg.text}
@@ -329,7 +337,7 @@ export default function Pattern() {
     <section id="pattern" ref={rootRef} className="relative z-[5] bg-ink">
       {/* Heading in normal document flow: a reader sees what this section is
           before the beats start. It scrolls away before the pin engages. */}
-      <div className="px-5 pb-16 pt-28 md:px-8 md:pb-24 md:pt-32">
+      <div className="px-5 pb-16 pt-16 md:px-8 md:pb-16 md:pt-32">
         <SectionHeading
           index={pattern.index}
           category={pattern.category}
@@ -342,16 +350,25 @@ export default function Pattern() {
       {/* Desktop: pinned split screen. Top padding clears the fixed navbar and
           both columns clip, so outgoing lines can never render through it. */}
       <div ref={pinRef} className="hidden h-dvh md:block">
-        <div ref={deskRef} className="grid h-full grid-cols-[42%_58%] gap-10 px-8 pb-12 pt-[7.5rem]">
-          <div className="relative overflow-hidden">
-            {pattern.pairs.map((pair) => (
-              <div
-                key={pair.id}
-                className="pt-pair absolute inset-0 flex flex-col items-start justify-center will-change-transform"
-              >
-                <Pair pair={pair} />
-              </div>
-            ))}
+        <div ref={deskRef} className="grid h-full grid-cols-[42%_58%] gap-12 px-8 pb-12 pt-[7.5rem]">
+          <div className="relative flex flex-col overflow-hidden">
+            <div className="relative flex-1">
+              {pattern.pairs.map((pair) => (
+                <div
+                  key={pair.id}
+                  className="pt-pair absolute inset-0 flex flex-col items-start justify-center will-change-transform"
+                >
+                  <Pair pair={pair} />
+                </div>
+              ))}
+            </div>
+            {/* The argument finishes here, flush on the same 32px edge, rather
+                than on a centred screen of its own restating what was just
+                shown three times. */}
+            <div className="pt-payoff shrink-0 pb-2">
+              <p className="display-m text-acid">{pattern.payoff.lead}</p>
+              <p className="deck mt-6 text-bone-dim">{pattern.payoff.line}</p>
+            </div>
           </div>
           <div className="relative overflow-hidden">
             {VISUALS.map((V, i) => (
@@ -363,8 +380,8 @@ export default function Pattern() {
         </div>
       </div>
 
-      {/* Mobile: stacked beats, no pin */}
-      <div className="px-5 md:hidden">
+      {/* Mobile: stacked beats, no pin. The payoff closes the run in flow. */}
+      <div className="px-5 pb-16 md:hidden">
         {pattern.pairs.map((pair, i) => {
           const V = VISUALS[i]
           return (
@@ -378,17 +395,10 @@ export default function Pattern() {
             </div>
           )
         })}
-      </div>
-
-      {/* Payoff: its own screen */}
-      <div
-        ref={payoffRef}
-        className="flex min-h-dvh flex-col items-center justify-center px-5 text-center md:px-8"
-      >
-        <p className="pt-lead display-l text-acid">{pattern.payoff.lead}</p>
-        <p className="pt-payoff-line display-m mt-6 block max-w-[26ch] overflow-hidden pb-[0.1em] -mb-[0.1em]">
-          <span className="inline-block will-change-transform">{pattern.payoff.line}</span>
-        </p>
+        <div ref={payoffRef} className="pt-payoff pt-4">
+          <p className="display-m text-acid">{pattern.payoff.lead}</p>
+          <p className="deck mt-6 text-bone-dim">{pattern.payoff.line}</p>
+        </div>
       </div>
     </section>
   )
