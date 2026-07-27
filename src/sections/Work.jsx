@@ -119,7 +119,7 @@ export default function Work() {
               ) : null}
             </div>
             <div className="col-start-2 flex items-baseline gap-3 md:col-start-3 md:self-start">
-              <span className="mono-label opacity-45">{p.year}</span>
+              <span className="mono-label opacity-60">{p.year}</span>
               <Stamp text={p.status} />
             </div>
           </li>

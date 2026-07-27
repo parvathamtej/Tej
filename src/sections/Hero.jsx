@@ -94,7 +94,7 @@ export default function Hero({ started }) {
           </span>
         </h1>
 
-        <div className="mt-10 flex flex-wrap items-end justify-between gap-x-10 gap-y-8 pb-16">
+        <div className="mt-10 pb-16">
           <div className="hero-soft prose-measure text-[clamp(1.15rem,1.7vw,1.6rem)]">
             {identity.statement.map((line) => (
               <span key={line} className="block">
@@ -102,13 +102,22 @@ export default function Hero({ started }) {
               </span>
             ))}
           </div>
-          <div className="hero-soft">
-            <p className="mono-label !normal-case text-[var(--accent-ui)]">{identity.credential}</p>
-            <p className="mono-label !normal-case mt-1.5 opacity-55">{identity.location}</p>
-          </div>
+          {/* Below the statement, quiet mono; only the company names carry acid */}
+          <p className="hero-soft mono-label !normal-case mt-8 opacity-60">
+            {identity.credential.split(/(Arrivio|GlobalLogic)/).map((part, i) =>
+              part === 'Arrivio' || part === 'GlobalLogic' ? (
+                <span key={i} className="text-acid">
+                  {part}
+                </span>
+              ) : (
+                <span key={i}>{part}</span>
+              ),
+            )}
+          </p>
+          <p className="hero-soft mono-label !normal-case mt-1.5 opacity-60">{identity.location}</p>
         </div>
 
-        <p className="hero-soft mono-label pb-10 opacity-50">SCROLL ↓</p>
+        <p className="hero-soft mono-label pb-10 opacity-60">SCROLL ↓</p>
       </div>
     </section>
   )

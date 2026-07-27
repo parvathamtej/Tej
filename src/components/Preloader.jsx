@@ -42,7 +42,7 @@ export default function Preloader({ onDone }) {
       })
         .from(
           '.pre-char',
-          { yPercent: 110, rotate: 6, duration: DUR, ease: EASE, stagger: STAGGER / 1.2 },
+          { yPercent: 110, duration: DUR, ease: EASE, stagger: STAGGER / 1.2 },
           0.1,
         )
         .from('.pre-meta', { opacity: 0, y: 12, duration: 0.6, ease: EASE }, 0.5)

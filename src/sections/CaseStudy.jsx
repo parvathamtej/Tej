@@ -1,162 +1,249 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Stamp from '../components/Stamp'
 import PullQuote from '../components/PullQuote'
-import { DUR_S, EASE, STAGGER } from '../lib/motion'
+import { DUR_S, EASE, MM, STAGGER, reduced } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// One component, three chapters. Every slot is optional except the header, so
-// Arrivio (everything), GlobalLogic (quote, no links) and Hansi (prose only)
-// all render from the same data shape in content.js.
+// Preview = the first paragraph, or the first two when the opener is a single
+// sentence. Cuts land on paragraph boundaries so no sentence is ever split.
+const sentenceCount = (p) => (p.match(/[.!?](\s|$)/g) || []).length
+function splitPreview(paras) {
+  if (paras.length <= 1) return [paras, []]
+  const take = sentenceCount(paras[0]) >= 2 ? 1 : 2
+  return [paras.slice(0, take), paras.slice(take)]
+}
+
+// One card on the dossier stage. Collapsed by default: heading + opening
+// sentences, the rest behind a real <button> with aria-expanded. The
+// GlobalLogic agent card opens expanded (strongest writing on the site).
+function Card({ card, active }) {
+  const [open, setOpen] = useState(card.defaultOpen || reduced())
+  const [preview, rest] = splitPreview(card.paras)
+  const bodyId = `cs-body-${card.key}`
+  return (
+    <article
+      className="cs-card flex flex-col border border-[var(--hair)] p-6 md:h-full md:w-full md:flex-none md:overflow-y-auto md:p-9"
+      data-active={active ? '1' : '0'}
+    >
+      {card.heading ? (
+        <h3 className="display-type display-caps max-w-[24ch] text-[clamp(1.3rem,2vw,1.9rem)] font-medium text-[var(--accent-ui)]">
+          {card.heading}
+        </h3>
+      ) : null}
+      <div className={`prose-measure flex flex-col gap-4 text-[clamp(0.98rem,1.1vw,1.1rem)] ${card.heading ? 'mt-5' : ''}`}>
+        {preview.map((p) => (
+          <p key={p.slice(0, 24)}>{p}</p>
+        ))}
+      </div>
+      {rest.length > 0 ? (
+        <>
+          <div className={`disclose ${open ? 'open' : ''}`}>
+            <div>
+              <div id={bodyId} className="prose-measure flex flex-col gap-4 pt-4 text-[clamp(0.98rem,1.1vw,1.1rem)]">
+                {rest.map((p) => (
+                  <p key={p.slice(0, 24)}>{p}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={bodyId}
+            onClick={() => setOpen((v) => !v)}
+            data-cursor=""
+            className="mono-label mt-5 self-start cursor-pointer border-0 bg-transparent p-0 text-[var(--accent-ui)] transition-opacity duration-200 hover:opacity-70"
+          >
+            {open ? 'COLLAPSE ↑' : 'EXPAND ↓'}
+          </button>
+        </>
+      ) : null}
+    </article>
+  )
+}
+
+// ─── The dossier ─────────────────────────────────────────────────────────────
+// Chapter pins. Fixed left rail (the reader always knows whose work this is),
+// horizontal card stage on the right, one card at a time, previous dims to 20%.
+// Hansi has no sub-cards: one composed screen, no pin. Mobile and
+// reduced-motion collapse to a vertical document.
 export default function CaseStudy({ study }) {
   const rootRef = useRef(null)
+  const pinRef = useRef(null)
+  const trackRef = useRef(null)
+  const dotsRef = useRef(null)
+
+  const cards = [
+    { key: `${study.id}-intro`, heading: null, paras: study.intro },
+    ...study.blocks.map((b, i) => ({
+      key: `${study.id}-${i}`,
+      heading: b.heading,
+      paras: b.body,
+      defaultOpen: b.heading === 'THEN I DESIGNED THE AGENT',
+    })),
+  ]
+  const single = study.blocks.length === 0
 
   useGSAP(
     () => {
+      const q = gsap.utils.selector(rootRef.current)
       const mm = gsap.matchMedia()
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        // Header
-        gsap
-          .timeline({ scrollTrigger: { trigger: rootRef.current, start: 'top 78%', once: true } })
-          .from('.cs-kicker', { opacity: 0, y: 14, duration: DUR_S, ease: EASE })
-          .from('.cs-title span', { yPercent: 115, duration: 0.9, ease: EASE }, '-=0.4')
-          .from('.cs-meta', { opacity: 0, y: 12, duration: DUR_S, ease: EASE }, '-=0.5')
-          .from('.cs-intro p', { opacity: 0, y: 24, duration: DUR_S, ease: EASE, stagger: 0.1 }, '-=0.4')
 
-        // Each sub-block gets its own beat, so the chapter reads as chapters
-        gsap.utils.toArray('.cs-block').forEach((block) => {
-          gsap
-            .timeline({ scrollTrigger: { trigger: block, start: 'top 78%', once: true } })
-            .from(block.querySelector('.cs-block-heading span'), {
-              yPercent: 115,
-              duration: 0.9,
-              ease: EASE,
-            })
-            .from(
-              block.querySelectorAll('.cs-block-body p'),
-              { opacity: 0, y: 24, duration: DUR_S, ease: EASE, stagger: 0.08 },
-              '-=0.45',
-            )
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.from(q('.cs-rail > *'), {
+          opacity: 0,
+          y: 18,
+          duration: DUR_S,
+          ease: EASE,
+          stagger: STAGGER,
+          scrollTrigger: { trigger: rootRef.current, start: 'top 70%', once: true },
+        })
+      })
+
+      if (!single) {
+        mm.add(MM.desk, () => {
+          const track = trackRef.current
+          const cardEls = q('.cs-card')
+          const dots = dotsRef.current.children
+          const n = cardEls.length
+          gsap.set(cardEls, { opacity: (i) => (i === 0 ? 1 : 0.2) })
+
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: rootRef.current,
+              start: 'top top',
+              end: `+=${(n - 1) * 90}%`,
+              scrub: 1,
+              pin: pinRef.current,
+              invalidateOnRefresh: true,
+              onUpdate: (self) => {
+                const active = Math.round(self.progress * (n - 1))
+                for (let i = 0; i < n; i++) {
+                  dots[i].textContent = i === active ? '●' : '○'
+                  dots[i].classList.toggle('text-acid', i === active)
+                }
+              },
+            },
+          })
+          const GAP = 20 // matches the md gap on the track
+          const step = () => track.parentElement.clientWidth + GAP
+          for (let i = 1; i < n; i++) {
+            const at = i - 1
+            tl.to(track, { x: () => -(i * step()), duration: 1, ease: EASE }, at)
+            tl.to(cardEls[i - 1], { opacity: 0.2, duration: 0.5, ease: EASE }, at + 0.1)
+            tl.to(cardEls[i], { opacity: 1, duration: 0.5, ease: EASE }, at + 0.3)
+          }
         })
 
-        if (rootRef.current.querySelector('.cs-tech')) {
-          gsap.from('.cs-tech li', {
-            opacity: 0,
-            y: 16,
-            duration: 0.5,
-            ease: EASE,
-            stagger: STAGGER / 2,
-            scrollTrigger: { trigger: '.cs-tech', start: 'top 88%', once: true },
+        mm.add(MM.mob, () => {
+          gsap.utils.toArray(q('.cs-card')).forEach((card) => {
+            gsap.from(card, {
+              opacity: 0,
+              y: 32,
+              duration: DUR_S,
+              ease: EASE,
+              scrollTrigger: { trigger: card, start: 'top 85%', once: true },
+            })
           })
-        }
-        if (rootRef.current.querySelector('.cs-links')) {
-          gsap.from('.cs-links li', {
-            opacity: 0,
-            y: 20,
-            duration: DUR_S,
-            ease: EASE,
-            stagger: 0.08,
-            scrollTrigger: { trigger: '.cs-links', start: 'top 88%', once: true },
-          })
-        }
-      })
+        })
+      }
+
       return () => mm.revert()
     },
     { scope: rootRef },
   )
 
   return (
-    <section
-      id={study.id}
-      ref={rootRef}
-      className="px-5 py-[clamp(6rem,16vh,12rem)] md:px-8"
-    >
-      {/* Header */}
-      <div className="cs-kicker hairline-t flex items-baseline justify-between pt-4">
-        <p className="mono-label">
-          <span className="text-[var(--accent-ui)]">[{study.index}]</span>
-          <span className="ml-3 opacity-60">{study.label}</span>
-        </p>
-      </div>
-
-      <h2 className="cs-title display-type display-caps mt-6 block overflow-hidden pb-[0.08em] -mb-[0.08em] text-[clamp(2.2rem,5.2vw,4.6rem)]">
-        <span className="inline-block will-change-transform">{study.title}</span>
-      </h2>
-
-      <div className="cs-meta mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
-        <p className="mono-label opacity-60">{study.meta}</p>
-        {study.stamp ? <Stamp text={study.stamp} /> : null}
-      </div>
-
-      <div className="cs-intro prose-measure mt-10 flex flex-col gap-5 text-[clamp(1rem,1.15vw,1.15rem)]">
-        {study.intro.map((p) => (
-          <p key={p.slice(0, 24)}>{p}</p>
-        ))}
-      </div>
-
-      {/* Sub-blocks. These carry the most air on the page. */}
-      {study.blocks.map((block) => (
-        <div key={block.heading}>
-          <div className="cs-block pt-[clamp(4.5rem,12vh,9rem)]">
-            <h3 className="cs-block-heading display-type display-caps block max-w-[22ch] overflow-hidden pb-[0.08em] -mb-[0.08em] text-[clamp(1.5rem,2.8vw,2.4rem)] text-[var(--accent-ui)]">
-              <span className="inline-block will-change-transform">{block.heading}</span>
-            </h3>
-            <div className="cs-block-body prose-measure mt-6 flex flex-col gap-5 text-[clamp(1rem,1.15vw,1.15rem)]">
-              {block.body.map((p) => (
-                <p key={p.slice(0, 24)}>{p}</p>
-              ))}
+    <section id={study.id} ref={rootRef} className="relative">
+      <div
+        ref={pinRef}
+        className={`grid grid-cols-1 gap-8 px-5 pb-10 pt-24 md:grid-cols-[32%_1fr] md:px-8 motion-reduce:!h-auto ${
+          single ? 'min-h-dvh content-center' : 'md:h-dvh'
+        }`}
+      >
+        {/* Left rail */}
+        <aside className="cs-rail flex flex-col gap-4 md:overflow-y-auto md:pr-4">
+          <p className="mono-label">
+            <span className="text-[var(--accent-ui)]">[{study.index}]</span>
+            <span className="ml-3 opacity-60">{study.label}</span>
+          </p>
+          <h2 className="display-type display-caps text-[clamp(1.8rem,2.6vw,2.5rem)] font-medium">
+            {study.title}
+          </h2>
+          <p className="mono-label !normal-case opacity-60">{study.meta}</p>
+          {study.stamp ? (
+            <div>
+              <Stamp text={study.stamp} />
             </div>
+          ) : null}
+          {study.stats ? (
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {study.stats.map((s) => (
+                <li key={s}>
+                  <Stamp text={s} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {study.tech ? (
+            <p className="mono-label !normal-case mt-2 max-w-[36ch] leading-relaxed opacity-60">
+              {study.tech.join(' · ')}
+            </p>
+          ) : null}
+          {study.links ? (
+            <ul className="mt-2 flex flex-col gap-1.5">
+              {study.links.map((l) => (
+                <li key={l.label}>
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    data-cursor="OPEN"
+                    className="mono-label transition-colors duration-200 hover:text-[var(--accent-ui)]"
+                  >
+                    {l.label} ↗
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </aside>
+
+        {/* Stage */}
+        {single ? (
+          <div className="prose-measure flex flex-col justify-center gap-5 text-[clamp(0.98rem,1.1vw,1.1rem)]">
+            {study.intro.map((p) => (
+              <p key={p.slice(0, 24)}>{p}</p>
+            ))}
           </div>
-          {block.quoteAfter && study.quote ? <PullQuote text={study.quote} /> : null}
-        </div>
-      ))}
-
-      {/* Stats */}
-      {study.stats ? (
-        <ul className="mt-[clamp(3.5rem,9vh,6rem)] flex flex-wrap gap-2.5">
-          {study.stats.map((s) => (
-            <li key={s}>
-              <Stamp text={s} />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {/* Tech */}
-      {study.tech ? (
-        <ul className="cs-tech mt-8 flex flex-wrap gap-x-5 gap-y-2">
-          {study.tech.map((t) => (
-            <li key={t} className="mono-label !normal-case opacity-50">
-              {t}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {/* Live links. Three only. The demand model is internal and never linked. */}
-      {study.links ? (
-        <ul className="cs-links hairline-t mt-10 pt-8">
-          {study.links.map((l) => (
-            <li key={l.label}>
-              <a
-                href={l.href}
-                target="_blank"
-                rel="noreferrer"
-                data-cursor="OPEN"
-                className="group flex flex-wrap items-baseline gap-x-4 py-3 transition-colors duration-200 hover:text-[var(--accent-ui)]"
+        ) : (
+          <div className="flex min-h-0 flex-col gap-4">
+            <div className="cs-stage min-h-0 flex-1 md:overflow-hidden">
+              <div
+                ref={trackRef}
+                className="flex flex-col gap-5 md:h-full md:flex-row motion-reduce:!flex-col"
               >
-                <span className="mono-label font-bold">{l.label} ↗</span>
-                <span className="mono-label !normal-case opacity-45 group-hover:opacity-80">
-                  {l.host}
+                {cards.map((card, i) => (
+                  <Card key={card.key} card={card} active={i === 0} />
+                ))}
+              </div>
+            </div>
+            <p ref={dotsRef} aria-hidden="true" className="mono-label hidden gap-2 md:flex motion-reduce:!hidden">
+              {cards.map((c, i) => (
+                <span key={c.key} className={i === 0 ? 'text-acid' : ''}>
+                  {i === 0 ? '●' : '○'}
                 </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+              ))}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {study.quote ? <PullQuote text={study.quote} /> : null}
     </section>
   )
 }

@@ -42,7 +42,7 @@ export default function ChapterHead({ index, label, title, hint }) {
           <span className="text-[var(--accent-ui)]">[{index}]</span>
           <span className="ml-3 opacity-60">{label}</span>
         </p>
-        {hint ? <p className="mono-label opacity-40">{hint}</p> : null}
+        {hint ? <p className="mono-label opacity-60">{hint}</p> : null}
       </div>
       <h2
         className="display-type display-caps mt-6 max-w-[16ch] text-[clamp(2.2rem,5.2vw,4.6rem)]"

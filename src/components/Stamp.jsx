@@ -49,7 +49,7 @@ export default function Stamp({ text, className = '', variant = 'chip' }) {
   return (
     <span
       ref={ref}
-      className={`mono-label inline-block !text-[0.8rem] font-bold ${chip} ${className}`}
+      className={`mono-label inline-block !text-[0.8rem] font-medium ${chip} ${className}`}
     >
       {text}
     </span>

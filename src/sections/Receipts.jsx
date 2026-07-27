@@ -33,6 +33,7 @@ export default function Receipts() {
 
   return (
     <section
+      id="receipts"
       ref={sectionRef}
       className="px-5 pb-[clamp(8rem,18vh,13rem)] pt-[clamp(3rem,7vh,5rem)] md:px-8"
     >

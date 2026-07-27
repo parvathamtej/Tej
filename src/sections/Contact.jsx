@@ -47,7 +47,6 @@ export default function Contact() {
         )
         gsap.from('.ct-char', {
           yPercent: 112,
-          rotate: 4,
           duration: DUR,
           ease: EASE,
           stagger: STAGGER / 1.5,
@@ -80,7 +79,7 @@ export default function Contact() {
             <span className="text-acid">[{contact.index}]</span>
             <span className="ml-3 opacity-60">{contact.label}</span>
           </p>
-          <p className="mono-label hidden opacity-40 md:block">{contact.kicker}</p>
+          <p className="mono-label hidden opacity-60 md:block">{contact.kicker}</p>
         </div>
 
         <h2
@@ -122,11 +121,11 @@ export default function Contact() {
         </div>
 
         <div className="ct-soft hairline-t flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4">
-          <p className="mono-label opacity-50">
+          <p className="mono-label opacity-60">
             {identity.locationShort} · {time} IST
           </p>
-          <p className="mono-label opacity-50">© 2026 TEJ PRAKASH</p>
-          <p className="mono-label hidden opacity-50 lg:block">{contact.credit}</p>
+          <p className="mono-label opacity-60">© 2026 TEJ PRAKASH</p>
+          <p className="mono-label hidden opacity-60 lg:block">{contact.credit}</p>
           <a href="#top" onClick={backToTop} data-cursor="" className="roll mono-label">
             <span>BACK TO TOP ↑</span>
             <span aria-hidden="true" className="text-acid">

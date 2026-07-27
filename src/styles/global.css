@@ -8,11 +8,13 @@
   --color-acid: #c8f04b;
   --color-acid-deep: #a8d62f;
 
-  /* Editorial serif display against a pixel-precise mono HUD. The contrast is
-     the point: the serif reads considered, the mono reads technical. */
-  --font-display: "Instrument Serif", Georgia, serif;
-  --font-body: "Geist", system-ui, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, monospace;
+  /* Fraunces with SOFT and WONK at zero is a sharp Scotch roman: formal,
+     precise, engineered. Variable weight gives real heading hierarchy without
+     changing size. Plex Mono carries a corporate-engineering register, not a
+     developer-tooling one. */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter Tight", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
 :root {
@@ -62,13 +64,15 @@ body {
   outline-offset: 3px;
 }
 
-/* Instrument Serif ships one weight and an italic. Hierarchy comes from size
-   and space, never weight. CASE IS CARRIED BY content.js, not by CSS. */
+/* Display = Fraunces at optical size 144, softness and wonk pinned to zero.
+   Weight 300 for large display; step up to 500/600 for sub-headings via the
+   normal font-weight utilities. CASE IS CARRIED BY content.js, not by CSS. */
 @utility display-type {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 0.96;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
 }
 
 /* All-caps display needs air where sentence case needs tightening. */
@@ -155,24 +159,8 @@ body {
   animation: spin-slow 14s linear infinite;
 }
 
-/* Terminal caret blink (Stack ticker) */
-@keyframes caret-blink {
-  0%,
-  55% {
-    opacity: 1;
-  }
-  56%,
-  100% {
-    opacity: 0;
-  }
-}
-.ticker-caret {
-  animation: caret-blink 1.1s steps(1) infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .hero-spin,
-  .ticker-caret {
+  .hero-spin {
     animation: none;
   }
 }
@@ -196,4 +184,64 @@ body {
 /* Turbo easter egg: the hero star spins faster while turbo is on */
 .hero-spin.turbo {
   animation-duration: 2.5s;
+}
+
+/* Expand/collapse: grid-rows trick gives a measured height transition to auto */
+.disclose {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.disclose > div {
+  overflow: hidden;
+}
+.disclose.open {
+  grid-template-rows: 1fr;
+}
+@media (prefers-reduced-motion: reduce) {
+  .disclose {
+    grid-template-rows: 1fr;
+    transition: none;
+  }
+}
+
+/* Pattern beat 2: schematic form fields */
+.field-cell {
+  border: 1px solid rgba(237, 234, 227, 0.28);
+  background: rgba(237, 234, 227, 0.04);
+}
+
+/* Pattern beat 2: blinking caret (sanctioned: a caret is an affordance) */
+@keyframes caret-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
+}
+
+/* Pattern beat 1 placeholder panels (real photography pending image rights;
+   swap is one line in content.js) */
+.ph-before {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 46px, rgba(237, 234, 227, 0.09) 46px 47px),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(237, 234, 227, 0.09) 46px 47px),
+    linear-gradient(180deg, #232320 0%, #161614 55%, #1b1b18 100%);
+}
+.ph-after {
+  background:
+    linear-gradient(115deg, transparent 55%, rgba(200, 240, 75, 0.14) 100%),
+    repeating-linear-gradient(90deg, transparent 0 92px, rgba(200, 240, 75, 0.16) 92px 93px),
+    linear-gradient(180deg, #2a2d1a 0%, #1d2110 60%, #23270f 100%);
 }

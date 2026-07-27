@@ -9,6 +9,7 @@ import Cursor from './components/Cursor'
 import Progress from './components/Progress'
 import Navbar from './components/Navbar'
 import Hud from './components/Hud'
+import ChapterRail from './components/ChapterRail'
 import Hero from './sections/Hero'
 import Pattern from './sections/Pattern'
 import CaseStudy from './sections/CaseStudy'
@@ -45,16 +46,20 @@ export default function App() {
     // is ordering-safe. Pinned sections use their pin-spacer as the trigger so
     // the chapter stays active for the whole pinned stretch.
     const say = (i) => window.dispatchEvent(new CustomEvent('tej:chapter', { detail: i }))
-    // Direct children only: nested blocks (the pull quote) must never shift indices.
-    gsap.utils.toArray('.site-main > section').forEach((el, i) => {
-      const target = el.parentElement?.classList.contains('pin-spacer') ? el.parentElement : el
-      ScrollTrigger.create({
-        trigger: target,
-        start: 'top 55%',
-        end: 'bottom 55%',
-        onToggle: (self) => self.isActive && say(i),
+    // Top-level sections only (nested blocks like the pull quote must never
+    // shift indices) — but pinned sections sit inside a pin-spacer by the time
+    // this runs, so both shapes must match.
+    gsap.utils
+      .toArray('.site-main > section, .site-main > .pin-spacer > section')
+      .forEach((el, i) => {
+        const target = el.parentElement?.classList.contains('pin-spacer') ? el.parentElement : el
+        ScrollTrigger.create({
+          trigger: target,
+          start: 'top 55%',
+          end: 'bottom 55%',
+          onToggle: (self) => self.isActive && say(i),
+        })
       })
-    })
     // Last chapter is the footer reveal (fixed element, keyed off main's bottom edge)
     ScrollTrigger.create({
       trigger: '.site-main',
@@ -105,6 +110,7 @@ export default function App() {
       <Progress />
       <Navbar />
       <Hud />
+      <ChapterRail />
       <main
         className="site-main relative z-10 mb-[100dvh]"
         style={{ background: 'var(--bg-page)' }}

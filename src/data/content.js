@@ -81,6 +81,27 @@ export const pattern = {
   },
 }
 
+// Right-panel visuals for the pinned Pattern split screen. Everything here is
+// schematic or generated: no real tools, no real data, no NDA exposure.
+export const patternVisuals = {
+  hansi: {
+    // Real photography pending image rights. null → crafted placeholder panels.
+    // To swap: set these to '/hansi-before.jpg' and '/hansi-after.jpg'.
+    beforeSrc: null,
+    afterSrc: null,
+    beforeLabel: 'BEFORE STATE',
+    afterLabel: 'AFTER DESIGN',
+  },
+  globallogic: {
+    sentence: 'book the white Fortuner for Ramesh, pickup tomorrow 10am',
+    fieldCount: 40,
+    screens: 5,
+  },
+  arrivio: {
+    label: 'ILLUSTRATIVE',
+  },
+}
+
 // ── 02 / 03 / 04 · THE CASE STUDIES ──────────────────────────────────────────
 // The demand model is internal. It is described, never linked, and its URL
 // appears nowhere in this file or the markup. Do not add one.
