@@ -104,7 +104,12 @@ export const pattern = {
       ],
     },
   ],
+  // The payoff keeps the frame the three beats established: same label slot,
+  // same badge slot. Dropping them would change the right column's shape at
+  // the exact moment the argument concludes.
   payoff: {
+    company: 'THE PATTERN · 2023 TO 2026',
+    badge: 'THREE FOR THREE',
     lead: 'Same move, three times.',
     line: 'Somebody was carrying an operational problem by hand. I replaced the hand with a system.',
   },

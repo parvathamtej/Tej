@@ -128,12 +128,48 @@ function run() {
   findings.forEach((f) => console.warn(`[INVISIBILITY AUDIT] ${f.element} · ${f.reason} · "${f.text}"`, f.node))
 }
 
+// ─── PIN ASSERTION (dev only) ────────────────────────────────────────────────
+//
+// A requested pin that never engages fails SILENTLY: ScrollTrigger accepts a
+// null pin target without complaint, and a start/end that compute to the same
+// value produce a pin with zero runway. Either way the section quietly becomes
+// an ordinary column, which is exactly how a broken pin shipped once already.
+// Every pin must therefore prove it has a live target and real runway.
+const MIN_RUNWAY = 10
+
+function assertPins() {
+  const failures = []
+  ScrollTrigger.getAll()
+    .filter((st) => st.vars.pin)
+    .forEach((st) => {
+      const p = st.vars.pin
+      const el = p === true ? st.trigger : p?.nodeType ? p : document.querySelector(p)
+      const name =
+        (st.trigger?.id && `#${st.trigger.id}`) ||
+        (st.trigger?.className || '').toString().split(' ').slice(0, 2).join('.') ||
+        'unnamed trigger'
+      if (!el) failures.push(`${name}: pin target does not resolve to an element`)
+      else if (!document.contains(el))
+        failures.push(`${name}: pin target is detached from the document`)
+      const runway = st.end - st.start
+      if (runway <= MIN_RUNWAY)
+        failures.push(`${name}: pin runway is ${Math.round(runway)}px (needs > ${MIN_RUNWAY}px)`)
+    })
+
+  if (!failures.length) return
+  console.error(`[PIN ASSERTION] ${failures.length} pin(s) requested but not viable:`)
+  failures.forEach((f) => console.error(`[PIN ASSERTION] ${f}`))
+}
+
 export function startInvisibilityAudit() {
   if (!import.meta.env.DEV) return
   let queued = null
   const schedule = () => {
     clearTimeout(queued)
-    queued = setTimeout(run, 400)
+    queued = setTimeout(() => {
+      run()
+      assertPins()
+    }, 400)
   }
   gsap.delayedCall(1.5, schedule)
   ScrollTrigger.addEventListener('refresh', schedule)

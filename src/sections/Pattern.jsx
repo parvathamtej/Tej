@@ -211,6 +211,7 @@ export default function Pattern() {
   const pinRef = useRef(null)
   const dotsRef = useRef(null)
   const counterRef = useRef(null)
+  const stageRef = useRef(null)
   const payoffMobRef = useRef(null)
 
   const STATES = pattern.pairs.length + 1 // three beats plus the payoff
@@ -226,6 +227,19 @@ export default function Pattern() {
         const visuals = q('.pt-visual')
         const dots = dotsRef.current ? [...dotsRef.current.children] : []
         const counter = counterRef.current
+
+        // The states are absolutely positioned so they share one origin, which
+        // leaves the stage with no natural height. Size it to the TALLEST state
+        // (visibility:hidden still lays out, so every panel measures) and never
+        // clip: one beat's copy is taller than the others and was being cut.
+        const sizeStage = () => {
+          const stage = stageRef.current
+          if (!stage) return
+          stage.style.height = 'auto'
+          stage.style.height = `${Math.max(...panels.map((p) => p.offsetHeight))}px`
+        }
+        sizeStage()
+        ScrollTrigger.addEventListener('refreshInit', sizeStage)
 
         gsap.set(panels, { autoAlpha: 0, y: 24 })
         gsap.set(visuals, { autoAlpha: 0 })
@@ -283,6 +297,7 @@ export default function Pattern() {
         for (let i = 0; i < pattern.pairs.length; i++) {
           addBeatVisual(tl, visuals[i], i, i + 0.08, 0.84)
         }
+        return () => ScrollTrigger.removeEventListener('refreshInit', sizeStage)
       })
 
       mm.add(MM.mob, () => {
@@ -338,16 +353,21 @@ export default function Pattern() {
     </>
   )
 
+  // The label slot every state shares, so the frame never changes shape
+  const LabelRow = ({ company, badge }) => (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <p className="mono-label opacity-70">{company}</p>
+      <span className="mono-label !text-[0.7rem] border border-[var(--accent-ui)] px-2 py-1 font-medium text-[var(--accent-ui)]">
+        {badge}
+      </span>
+    </div>
+  )
+
   const BeatText = ({ pair }) => (
     <>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <p className="mono-label opacity-70">{pair.company}</p>
-        <span className="mono-label !text-[0.7rem] border border-[var(--accent-ui)] px-2 py-1 font-medium text-[var(--accent-ui)]">
-          {pair.badge}
-        </span>
-      </div>
-      <p className="display-s mt-6 max-w-[30ch]">{pair.problem}</p>
-      <p className="display-s mt-4 max-w-[30ch]">
+      <LabelRow company={pair.company} badge={pair.badge} />
+      <p className="display-s mt-5 max-w-[30ch]">{pair.problem}</p>
+      <p className="display-s mt-3 max-w-[30ch]">
         {pair.solution.map((seg, s) => (
           <span key={s} className={seg.accent ? 'text-acid' : undefined}>
             {seg.text}
@@ -359,8 +379,9 @@ export default function Pattern() {
 
   const Payoff = () => (
     <>
-      <p className="display-m max-w-[22ch] text-acid">{pattern.payoff.lead}</p>
-      <p className="deck mt-6 text-bone-dim">{pattern.payoff.line}</p>
+      <LabelRow company={pattern.payoff.company} badge={pattern.payoff.badge} />
+      <p className="display-m mt-5 max-w-[22ch] text-acid">{pattern.payoff.lead}</p>
+      <p className="deck mt-3 text-bone-dim">{pattern.payoff.line}</p>
     </>
   )
 
@@ -387,8 +408,11 @@ export default function Pattern() {
               01 / 0{pattern.pairs.length}
             </p>
 
-            {/* Text is capped and scrolls internally; the visual never compresses */}
-            <div className="relative mt-4 min-h-0 flex-1 overflow-y-auto">
+            {/* The text stage takes exactly the height its tallest state needs
+                and NEVER clips: `overflow-y-auto` here hid the last line of the
+                GlobalLogic beat (205px of copy in a 186px box) with no scrollbar
+                to signal it. The visual takes the remainder and keeps a floor. */}
+            <div ref={stageRef} className="relative mt-4 shrink-0">
               {pattern.pairs.map((pair) => (
                 <div key={pair.company} className="pt-panel absolute inset-x-0 top-0">
                   <BeatText pair={pair} />
@@ -399,7 +423,7 @@ export default function Pattern() {
               </div>
             </div>
 
-            <div className="relative mt-8 min-h-[480px] shrink-0 overflow-hidden border border-[var(--hair)]">
+            <div className="relative mt-8 min-h-[440px] flex-1 overflow-hidden border border-[var(--hair)]">
               {VISUALS.map((V, i) => (
                 <div key={i} className="pt-visual absolute inset-0">
                   <V />
