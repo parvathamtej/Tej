@@ -13,6 +13,10 @@ export const MM = {
   reduce: '(prefers-reduced-motion: reduce)',
 }
 
+// Glyph set for every ScrambleText decrypt on the site (stamps + the payoff).
+// One set so the "machine thinking" texture is identical everywhere.
+export const SCRAMBLE_CHARS = '01<>[]#%/█▓▒'
+
 export const reduced = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 

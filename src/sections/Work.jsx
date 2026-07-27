@@ -103,10 +103,23 @@ export default function Work() {
             <p className="mono-label text-acid group-hover:text-[var(--bg-page)]">{p.index}</p>
             <div>
               <h3 className="display-type text-[clamp(1.5rem,3.4vw,2.9rem)]">{p.name}</h3>
-              <p className="mt-3 max-w-[52ch] text-bone-dim group-hover:text-[var(--bg-page)]">{p.desc}</p>
-              <p className="mono-label mt-4 opacity-50">{p.tags}</p>
+              <p className="prose-measure mt-3 text-bone-dim group-hover:text-[var(--bg-page)]">
+                {p.desc}
+              </p>
+              {p.href ? (
+                <a
+                  href={p.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-cursor="OPEN"
+                  className="mono-label !normal-case mt-4 inline-block opacity-60 underline-offset-4 hover:underline hover:opacity-100"
+                >
+                  → {p.hrefLabel}
+                </a>
+              ) : null}
             </div>
-            <div className="col-start-2 md:col-start-3 md:self-start">
+            <div className="col-start-2 flex items-baseline gap-3 md:col-start-3 md:self-start">
+              <span className="mono-label opacity-45">{p.year}</span>
               <Stamp text={p.status} />
             </div>
           </li>

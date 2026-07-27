@@ -45,7 +45,7 @@ export default function ChapterHead({ index, label, title, hint }) {
         {hint ? <p className="mono-label opacity-40">{hint}</p> : null}
       </div>
       <h2
-        className="display-type mt-6 max-w-[16ch] text-[clamp(2.2rem,5.2vw,4.6rem)]"
+        className="display-type display-caps mt-6 max-w-[16ch] text-[clamp(2.2rem,5.2vw,4.6rem)]"
         style={{ textWrap: 'balance' }}
       >
         {title.split(' ').map((w, i) => (

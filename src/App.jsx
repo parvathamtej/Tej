@@ -10,12 +10,13 @@ import Progress from './components/Progress'
 import Navbar from './components/Navbar'
 import Hud from './components/Hud'
 import Hero from './sections/Hero'
-import Manifesto from './sections/Manifesto'
-import Velocity from './sections/Velocity'
+import Pattern from './sections/Pattern'
+import CaseStudy from './sections/CaseStudy'
 import Stack from './sections/Stack'
 import Work from './sections/Work'
 import Receipts from './sections/Receipts'
 import Contact from './sections/Contact'
+import { caseStudies, chapters } from './data/content'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
@@ -44,7 +45,8 @@ export default function App() {
     // is ordering-safe. Pinned sections use their pin-spacer as the trigger so
     // the chapter stays active for the whole pinned stretch.
     const say = (i) => window.dispatchEvent(new CustomEvent('tej:chapter', { detail: i }))
-    gsap.utils.toArray('.site-main section').forEach((el, i) => {
+    // Direct children only: nested blocks (the pull quote) must never shift indices.
+    gsap.utils.toArray('.site-main > section').forEach((el, i) => {
       const target = el.parentElement?.classList.contains('pin-spacer') ? el.parentElement : el
       ScrollTrigger.create({
         trigger: target,
@@ -53,12 +55,12 @@ export default function App() {
         onToggle: (self) => self.isActive && say(i),
       })
     })
-    // Chapter 06 = the footer reveal (fixed element — keyed off main's bottom edge)
+    // Last chapter is the footer reveal (fixed element, keyed off main's bottom edge)
     ScrollTrigger.create({
       trigger: '.site-main',
       start: 'bottom 60%',
-      onEnter: () => say(6),
-      onLeaveBack: () => say(5),
+      onEnter: () => say(chapters.length - 1),
+      onLeaveBack: () => say(chapters.length - 2),
     })
 
     const mm = gsap.matchMedia()
@@ -108,8 +110,10 @@ export default function App() {
         style={{ background: 'var(--bg-page)' }}
       >
         <Hero started={started} />
-        <Manifesto />
-        <Velocity />
+        <Pattern />
+        {caseStudies.map((study) => (
+          <CaseStudy key={study.id} study={study} />
+        ))}
         <Stack />
         <Work />
         <Receipts />

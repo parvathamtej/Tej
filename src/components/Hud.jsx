@@ -43,7 +43,8 @@ export default function Hud() {
       const onChapter = (e) => {
         setChapter(e.detail)
         gsap.to(rootRef.current, {
-          autoAlpha: e.detail === 6 ? 0 : 1,
+          // Hands off at the final chapter: the footer carries its own contact info
+          autoAlpha: e.detail === chapters.length - 1 ? 0 : 1,
           duration: 0.4,
           ease: 'power2.out',
         })

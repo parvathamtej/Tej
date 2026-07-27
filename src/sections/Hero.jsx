@@ -7,17 +7,7 @@ import { DUR, EASE, STAGGER, reduced } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-const Line = ({ text, className = '' }) => (
-  <span className={`block overflow-hidden pb-[0.06em] -mb-[0.06em] ${className}`}>
-    {text.split('').map((c, i) => (
-      <span key={i} className="hero-char inline-block will-change-transform">
-        {c}
-      </span>
-    ))}
-  </span>
-)
-
-// Easter egg: the ✦ toggles turbo mode — the whole site scrolls faster.
+// Easter egg: the ✦ toggles turbo mode, and the whole site scrolls faster.
 const toggleTurbo = (e) => {
   const on = !window.__turbo
   window.__turbo = on
@@ -35,29 +25,29 @@ export default function Hero({ started }) {
   const sectionRef = useRef(null)
   const innerRef = useRef(null)
 
-  // Initial hidden states (preloader covers the screen while these hold)
+  const name = `${identity.first} ${identity.last}`
+
   useGSAP(
     () => {
       if (reduced()) return
-      gsap.set('.hero-char', { yPercent: 112, rotate: 4 })
+      gsap.set('.hero-char', { yPercent: 112 })
       gsap.set('.hero-soft', { opacity: 0, y: 18 })
     },
     { scope: sectionRef },
   )
 
-  // Entrance — fired when the preloader finishes
   useGSAP(
     () => {
       if (!started || reduced()) return
       gsap
         .timeline()
-        .to('.hero-char', { yPercent: 0, rotate: 0, duration: DUR, ease: EASE, stagger: STAGGER / 1.5 }, 0)
+        .to('.hero-char', { yPercent: 0, duration: DUR, ease: EASE, stagger: STAGGER / 1.5 }, 0)
         .to('.hero-soft', { opacity: 1, y: 0, duration: 0.8, ease: EASE, stagger: 0.12 }, 0.45)
     },
     { scope: sectionRef, dependencies: [started] },
   )
 
-  // Exit — hero sinks and dims while the manifesto slides over it (curtain)
+  // Hero sinks and dims while the pattern slides over it
   useGSAP(
     () => {
       const mm = gsap.matchMedia()
@@ -81,37 +71,45 @@ export default function Hero({ started }) {
 
   return (
     <section ref={sectionRef} id="top" className="relative flex min-h-dvh flex-col">
-      <div ref={innerRef} className="flex flex-1 flex-col px-5 pt-24 md:px-8">
-        <p className="hero-soft mono-label opacity-60">{identity.eyebrow}</p>
-
+      <div ref={innerRef} className="flex flex-1 flex-col px-5 pt-28 md:px-8">
         <h1
-          className="display-type mt-auto pt-10 text-[clamp(4rem,16.5vw,15rem)]"
-          aria-label={`${identity.first} ${identity.last}`}
+          className="display-type display-caps mt-auto text-[clamp(3.5rem,13vw,11rem)]"
+          aria-label={name}
         >
-          <Line text={identity.first} />
-          <Line text={identity.last} className="text-right md:text-left md:pl-[18vw]" />
+          <span className="block overflow-hidden pb-[0.08em] -mb-[0.08em]">
+            {name.split('').map((c, i) => (
+              <span key={i} className="hero-char inline-block will-change-transform" aria-hidden="true">
+                {c === ' ' ? ' ' : c}
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={toggleTurbo}
+              aria-label="Toggle turbo scroll mode"
+              data-cursor="TURBO?"
+              className="hero-spin hero-char ml-[0.12em] inline-block cursor-pointer border-0 bg-transparent align-baseline text-[0.42em] text-acid"
+            >
+              ✦
+            </button>
+          </span>
         </h1>
 
-        <div className="mt-8 flex flex-wrap items-end justify-between gap-6 pb-16 md:mt-10">
-          <p className="hero-soft mono-label opacity-60">SCROLL ↓</p>
-          <div className="hero-soft max-w-md text-right">
-            <p className="mono-label text-acid">{identity.role}</p>
-            <p className="serif-accent mt-2 text-[clamp(1.25rem,2vw,1.7rem)] text-bone-dim">
-              {identity.roleSub}
-            </p>
+        <div className="mt-10 flex flex-wrap items-end justify-between gap-x-10 gap-y-8 pb-16">
+          <div className="hero-soft prose-measure text-[clamp(1.15rem,1.7vw,1.6rem)]">
+            {identity.statement.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </div>
+          <div className="hero-soft">
+            <p className="mono-label !normal-case text-[var(--accent-ui)]">{identity.credential}</p>
+            <p className="mono-label !normal-case mt-1.5 opacity-55">{identity.location}</p>
           </div>
         </div>
-      </div>
 
-      <button
-        type="button"
-        onClick={toggleTurbo}
-        aria-label="Toggle turbo scroll mode"
-        data-cursor="TURBO?"
-        className="hero-spin hero-soft absolute right-[8vw] top-[30%] hidden cursor-pointer border-0 bg-transparent p-2 text-[clamp(2rem,4vw,3.5rem)] text-acid md:block"
-      >
-        ✦
-      </button>
+        <p className="hero-soft mono-label pb-10 opacity-50">SCROLL ↓</p>
+      </div>
     </section>
   )
 }

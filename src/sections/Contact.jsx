@@ -84,7 +84,7 @@ export default function Contact() {
         </div>
 
         <h2
-          className="display-type mt-auto text-[clamp(4rem,15vw,13.5rem)]"
+          className="display-type display-caps mt-auto text-[clamp(4rem,15vw,13.5rem)]"
           aria-label={`${contact.lineA} ${contact.lineB}`}
         >
           <Line text={contact.lineA} />
@@ -101,20 +101,29 @@ export default function Contact() {
             </a>
           </MagneticButton>
           <nav className="ct-soft flex gap-7" aria-label="Social links">
-            {contact.links.map((l) => (
-              <a key={l.label} href={l.href} target="_blank" rel="noreferrer" data-cursor="" className="roll mono-label">
-                <span>{l.label} ↗</span>
-                <span aria-hidden="true" className="text-acid">
-                  {l.label} ↗
-                </span>
-              </a>
-            ))}
+            {contact.links.map((l) => {
+              // A download link (the résumé slot) stays same-tab and gets ↓
+              const arrow = l.download ? '↓' : '↗'
+              const extra = l.download
+                ? { download: '' }
+                : { target: '_blank', rel: 'noreferrer' }
+              return (
+                <a key={l.label} href={l.href} data-cursor="" className="roll mono-label" {...extra}>
+                  <span>
+                    {l.label} {arrow}
+                  </span>
+                  <span aria-hidden="true" className="text-acid">
+                    {l.label} {arrow}
+                  </span>
+                </a>
+              )
+            })}
           </nav>
         </div>
 
         <div className="ct-soft hairline-t flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4">
           <p className="mono-label opacity-50">
-            {identity.location} · {time} IST
+            {identity.locationShort} · {time} IST
           </p>
           <p className="mono-label opacity-50">© 2026 TEJ PRAKASH</p>
           <p className="mono-label hidden opacity-50 lg:block">{contact.credit}</p>

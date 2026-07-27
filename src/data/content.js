@@ -1,169 +1,282 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // EVERY string on the site lives here. Edit copy without touching components.
-// House style: NO em dashes anywhere. Separators are "·" or "/". Keep copy
-// human: short sentences, plain punctuation.
-// ⚠ VERIFY flags: email (old site had a typo "gmial"), GitHub URL, timeline years.
+//
+// HOUSE STYLE (hard rules, see PLAN.md V4/V5):
+//   · No em dashes. Separators are "·" or "/". Arrows (→) are glyphs, allowed.
+//   · No AI-tell vocabulary. No balanced rule-of-three sentences.
+//   · Specific nouns and real numbers over adjectives and intensifiers.
+//   · CASE IS CARRIED HERE, not by CSS. Chapter titles and the hero are caps;
+//     prose, the pattern lines and the pull quote are sentence case.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const identity = {
   first: 'TEJ',
   last: 'PRAKASH',
   logo: 'TEJ PRAKASH®',
-  role: 'SOFTWARE DEVELOPER · AI & ML',
-  roleSub: 'building data-driven systems at Arrivio',
-  eyebrow: 'PORTFOLIO © 2026 · HYDERABAD, IN',
+  statement: [
+    'I build the internal systems companies run on.',
+    'The ones that replace the spreadsheet, the manual follow-up,',
+    'and the "let me check and get back to you."',
+  ],
+  credential: 'Founding Engineer at Arrivio. Previously GlobalLogic, a Hitachi Group company.',
+  location: 'Hyderabad, India.',
+  locationShort: 'HYDERABAD, IN',
   email: 'parvathamtej@gmail.com',
-  location: 'HYDERABAD, IN',
 }
 
 export const preloader = {
-  tagline: 'LOADING · FAST LEARNER DETECTED',
+  tagline: 'LOADING · INTERNAL SYSTEMS',
 }
 
-// Bottom HUD bar. Chapter names must match section order in App.jsx
+// Bottom HUD bar. Order must match the sections rendered in App.jsx.
 export const chapters = [
   '00 / INTRO',
-  '01 / THE PITCH',
-  '02 / THE PROOF',
-  '03 / THE STACK',
-  '04 / SELECTED WORK',
-  '05 / THE RECEIPTS',
-  '06 / SAY HI',
+  '01 / THE PATTERN',
+  '02 / ARRIVIO',
+  '03 / GLOBALLOGIC',
+  '04 / HANSI',
+  '05 / THE STACK',
+  '06 / SELECTED WORK',
+  '07 / THE RECEIPTS',
+  '08 / SAY HI',
 ]
 
 export const availability = 'OPEN TO OPPORTUNITIES'
 
-// Manifesto segments; accent:true renders acid + Gambetta italic
-export const manifesto = {
+// ── 01 / THE PATTERN ─────────────────────────────────────────────────────────
+// The argument the whole page exists to prove. Problem line lands first, the
+// solution line lands a beat later. `accent` renders acid + italic.
+export const pattern = {
   index: '01',
-  label: 'THE PITCH',
-  segments: [
-    { text: 'Most developers pick a lane. I ', accent: false },
-    { text: 'pick things up', accent: true },
-    { text: '. New stack, new domain, new language: give me a week and I’m dangerous. Give me a month and I’m ', accent: false },
-    { text: 'shipping', accent: true },
-    { text: '. From CAD blueprints to neural networks, everything I touch gets ', accent: false },
-    { text: 'absorbed', accent: true },
-    { text: '. ', accent: false },
-    { text: 'Fast.', accent: true },
-  ],
-}
-
-export const velocity = {
-  index: '02',
-  label: 'THE PROOF',
-  title: 'Absorption speed, documented.',
-  cards: [
+  label: 'THE PATTERN',
+  pairs: [
     {
-      year: '2021',
-      tag: 'DESIGN',
-      title: 'The blueprint years',
-      body: 'AutoCAD, learned properly. Certified during an internship at Hansi Kitchens. First lesson in precision.',
-      footnote: '@hansi-kitchens',
+      problem: 'Hansi could not show a client the room they were paying for.',
+      solution: [
+        { text: 'So I ' },
+        { text: 'built the thing', accent: true },
+        { text: ' that shows them.' },
+      ],
     },
     {
-      year: '2022',
-      tag: 'CODE',
-      title: 'Hello, world',
-      body: 'C for the fundamentals, Python for everything else. Zero syntax to daily programs in one semester.',
-      footnote: '@self-taught',
+      problem: 'GlobalLogic had advisors filling forty fields to book one car.',
+      solution: [
+        { text: 'So I ' },
+        { text: 'built the thing', accent: true },
+        { text: ' that takes a sentence.' },
+      ],
     },
     {
-      year: '2023',
-      tag: 'WEB',
-      title: 'The web, absorbed',
-      body: 'HTML, CSS, JavaScript. First portfolio live on the internet within weeks of starting.',
-      footnote: '@v1-shipped',
-    },
-    {
-      year: '2024',
-      tag: 'AI/ML',
-      title: 'Machine learning clicks',
-      body: 'B.Tech CSE with an AI & ML focus. Built an AI-assisted telemedicine kiosk concept for rural India.',
-      footnote: '@for-real-impact',
-    },
-    {
-      year: '2025',
-      tag: 'SYSTEMS',
-      title: 'Production patterns',
-      body: 'Pipelines, deployment, monitoring. Learning how data systems behave outside the notebook.',
-      footnote: '@scaling-up',
-    },
-    {
-      year: '2026',
-      tag: 'NOW',
-      title: 'Production mode',
-      body: 'Software Developer at Arrivio. Data systems shipped to real users.',
-      footnote: '@arrivio',
+      problem: 'Arrivio could not see which market to enter next.',
+      solution: [
+        { text: 'So I ' },
+        { text: 'built the thing', accent: true },
+        { text: ' that maps it.' },
+      ],
     },
   ],
+  payoff: {
+    lead: 'Same move, three times.',
+    line: 'Somebody was carrying an operational problem by hand. I replaced the hand with a system.',
+  },
 }
 
+// ── 02 / 03 / 04 · THE CASE STUDIES ──────────────────────────────────────────
+// The demand model is internal. It is described, never linked, and its URL
+// appears nowhere in this file or the markup. Do not add one.
+export const caseStudies = [
+  {
+    id: 'arrivio',
+    index: '02',
+    label: 'ARRIVIO',
+    title: 'FOUNDING ENGINEER',
+    meta: 'Arrivio · January 2026 to present · Remote, Berlin',
+    stamp: 'STATUS: CURRENT',
+    intro: [
+      'I am the first engineer at Arrivio and I built the engineering function. I hired the team of six that runs it, set the architecture everything is built on, and own the technical direction of the product.',
+      'Arrivio is building move-in-ready housing for people relocating internationally. Most of what that requires did not exist when I joined. It exists now.',
+      'Eleven production modules across four surfaces: the consumer platform, the B2B portal, the admin console and the community product.',
+    ],
+    blocks: [
+      {
+        heading: 'THE PROPERTY ASSISTANT',
+        body: [
+          'A language model that takes a renter’s requirements in plain conversation and returns real matching inventory. GPT-4o-mini against a FastAPI service, a Leaflet map, and conversation state held across the session, so it behaves like something that was listening rather than a search box wearing a chat skin.',
+        ],
+      },
+      {
+        heading: 'CONTRACT EXECUTION WITH NO HUMAN IN IT',
+        body: [
+          'Payment clears, the contract issues for signature, the signed document files itself. The old loop was two days of generating, emailing, waiting, chasing and filing. It is under five minutes now and nobody touches it.',
+        ],
+      },
+      {
+        heading: 'THE DEMAND MODEL',
+        body: [
+          'A geospatial system that decides where the company expands before it commits capital. It maps immigrant inflow against existing supply, scores acquisition targets by walk, bike and transit reachability, and computes addressable market live across roughly 185 client positions.',
+          'Sizing a market by hand took days and was stale on arrival. It takes under an hour now. That changed the question the founders ask, from whether we can afford to study a market to which one we take next.',
+          'I was not handed a spec for that one. I was in the room while the decision was being argued, and the tool exists because the argument needed better inputs.',
+        ],
+      },
+    ],
+    stats: ['11 MODULES', '4 SURFACES', 'TEAM OF 6', '2 DAYS → 5 MIN', 'DAYS → 1 HOUR'],
+    tech: [
+      'React', 'Vite', 'Python', 'FastAPI', 'Node.js', 'Supabase', 'PostgreSQL',
+      'GPT-4o-mini', 'Leaflet', 'Stripe', 'Cashfree', 'DocuSign', 'GCP', 'Vercel',
+    ],
+    links: [
+      { label: 'B2C PLATFORM', host: 'arrivio-b2c.vercel.app', href: 'https://arrivio-b2c.vercel.app' },
+      { label: 'B2B PORTAL', host: 'arrivio-b2b.vercel.app', href: 'https://arrivio-b2b.vercel.app' },
+      { label: 'COMMUNITY', host: 'arrivio-community.vercel.app', href: 'https://arrivio-community.vercel.app' },
+    ],
+  },
+  {
+    id: 'globallogic',
+    index: '03',
+    label: 'GLOBALLOGIC',
+    title: 'ENGINEERING INTERN',
+    meta: 'GlobalLogic, a Hitachi Group company · November 2025 to June 2026 · Hyderabad',
+    intro: [
+      'Two engineers, three sprints, a dealer management system for vehicle rental operators, demoed to business stakeholders at the end of every sprint.',
+      'I owned fleet inventory, the availability engine, quotation pricing, the booking flow, pre-trip inspection and return settlement. Nine tables, six analytics surfaces, two user roles.',
+    ],
+    blocks: [
+      {
+        heading: 'I FOUND THE SYSTEM RUNNING TWO OF EVERYTHING',
+        body: [
+          'Two pricing engines. Two availability systems. Two booking flows. All live at once, producing availability bugs nobody could reliably reproduce.',
+          'I mapped what actually existed, named a single source of truth for each concern, and rebuilt it against that. Pricing became one deterministic function. Availability became pure booking overlap logic in the database instead of a hybrid of real queries and UI flags. Quotations got a real state machine.',
+          'Generating a quote used to be an insert, then a six-attempt polling loop, then a frontend fallback for when the database never answered. It is now a calculation and one write.',
+        ],
+        quoteAfter: true,
+      },
+      {
+        heading: 'THEN I DESIGNED THE AGENT',
+        body: [
+          'An assistant that lets an advisor book a car by typing one sentence instead of working through five screens and more than forty fields. That is about eighty percent of their data entry, on every booking.',
+          'The design is the interesting part. The model has no database access at all. It requests tools by name and the orchestrator executes them using the advisor’s own token, so the assistant inherits exactly the permissions that advisor already has and can never exceed them.',
+          'Every write sits behind an explicit confirmation. Booking creation is one atomic transaction with an idempotency key, so a double-tap or a timeout retry cannot produce two bookings. Pricing is computed server-side and re-verified before the write, because a model that can be talked into a number will eventually be talked into the wrong one.',
+          'I wrote all of that down before writing any code, including why fine-tuning is the wrong tool here. Fine-tuning teaches style, not facts, and rental data changes hourly.',
+        ],
+      },
+    ],
+    quote: 'Double booking stopped being a bug we fixed and became something the system cannot do.',
+    stats: ['9 TABLES', '6 ANALYTICS SURFACES', '3 SPRINTS', '2 ENGINEERS', '80% LESS DATA ENTRY'],
+    tech: [
+      'Angular', 'TypeScript', 'Supabase', 'PostgreSQL', 'RLS', 'SCSS',
+      'Cashfree', 'Vercel', 'LLM tool calling', 'Agent design',
+    ],
+  },
+  {
+    id: 'hansi',
+    index: '04',
+    label: 'HANSI',
+    title: 'SYSTEMS DEVELOPER',
+    meta: 'Hansi Kitchens · 2023',
+    stamp: 'NDA · NO SCREENSHOTS',
+    intro: [
+      'Interior fit-out has an expensive communication problem. A client approves a drawing, pictures something slightly different in their head, and finds the gap when the work is half built. By then the change costs real money and real weeks.',
+      'I built the software that closes it. It renders a client’s complete interior before any work starts, so the conversation about what they actually want happens while changes are still free.',
+      'Revisions moved from the middle of a build to before it begins. Approval got faster. And the sales team stopped describing what a room would look like and started showing it, which turned out to matter more than anything else the tool did.',
+      'I was nineteen. It is still in use, and it is under NDA, so there are no screenshots on this page. Happy to walk through the architecture in person.',
+    ],
+    blocks: [],
+  },
+]
+
+// ── 05 / THE STACK (moss flood) ──────────────────────────────────────────────
+// No ratings, no percentages, no proficiency bars. Ever.
 export const stack = {
-  index: '03',
+  index: '05',
   label: 'THE STACK',
-  title: 'Currently loaded.',
+  title: 'WHAT I REACH FOR',
   rows: [
-    { label: 'LANGUAGES', items: 'Python · C · JavaScript · SQL' },
-    { label: 'AI / ML', items: 'scikit-learn · TensorFlow · Pandas · NumPy · Data Pipelines' },
-    { label: 'WEB', items: 'React · Node.js · Tailwind · Firebase' },
-    { label: 'TOOLS', items: 'Git · Linux · AutoCAD · Figma' },
+    { label: 'LANGUAGES', items: 'Python · TypeScript · JavaScript · Java · SQL' },
+    {
+      label: 'AI SYSTEMS',
+      items: 'LLM tool calling and agent design · RAG · LangChain · Whisper · Stable Diffusion · Hugging Face · prompt design',
+    },
+    { label: 'FRONTEND', items: 'React · Angular · Vite · Tailwind · SCSS' },
+    { label: 'BACKEND', items: 'FastAPI · Node.js · Supabase · PostgreSQL · RLS' },
+    { label: 'PLATFORM', items: 'Vercel · GCP · Firebase · Render · Docker' },
+    { label: 'PRODUCT', items: 'Stripe · Cashfree · DocuSign · Leaflet · OpenRouteService' },
   ],
-  ticker: '> absorbing_now: LLM tooling / GSAP / cloud infra',
+  closer: {
+    heading: 'WHAT I ACTUALLY DO WITH IT',
+    line: 'Find the manual loop that is costing somebody their week. Delete it.',
+  },
 }
 
+// ── 06 / SELECTED WORK ───────────────────────────────────────────────────────
+// Honest labels. Inflated ones next to the Arrivio chapter would poison it.
 export const work = {
-  index: '04',
+  index: '06',
   label: 'SELECTED WORK',
-  title: 'Some things I’ve built.',
+  title: 'EVERYTHING ELSE',
   projects: [
     {
       index: '01',
-      name: 'AI Telemedicine Kiosk',
-      desc: 'AI-assisted healthcare access for rural India. Triage intelligence where doctors are scarce.',
-      tags: 'AI/ML · PYTHON · HEALTHCARE',
-      status: 'IN DEVELOPMENT',
-      art: 'kiosk',
+      name: 'RAG Document Intelligence',
+      desc: 'Upload a document, ask questions, get answers grounded in the text rather than invented around it. LangChain, Chroma, Google text-embedding-004, Gemini 2.5 Flash, Streamlit, containerised and deployed.',
+      year: '2025',
+      status: 'LIVE',
+      href: 'https://github.com/parvathamtej/Rag-Chat-App',
+      hrefLabel: 'github.com/parvathamtej/Rag-Chat-App',
+      art: 'rag',
     },
     {
       index: '02',
-      name: 'This Website',
-      desc: 'You’re scrolling the case study. A scroll-driven narrative engineered with GSAP, Lenis and React.',
-      tags: 'REACT · GSAP · MOTION',
-      status: 'LIVE',
-      art: 'site',
+      name: 'Speech to Image',
+      desc: 'Speak, and the system draws what you said. Whisper transcribes, sentiment analysis shapes the prompt, Stable Diffusion renders it. Built with a team during the Infosys Springboard programme.',
+      year: '2024',
+      status: 'TEAM · INFOSYS',
+      art: 'speech',
     },
     {
       index: '03',
-      name: 'Data Systems @ Arrivio',
-      desc: 'Pipelines and internal intelligence for a global team. Details under NDA. The outcomes aren’t.',
-      tags: 'DATA · PYTHON · PROD',
-      status: 'SHIPPING',
-      art: 'data',
+      name: 'Telemedicine Kiosk',
+      desc: 'Rural healthcare access, built as team Sahay for Smart India Hackathon. Concept and working front end for a kiosk that puts a consultation within reach of a village.',
+      year: '2023',
+      status: 'SMART INDIA HACKATHON',
+      art: 'kiosk',
+    },
+    {
+      index: '04',
+      name: 'AI Career Advisor',
+      desc: 'A conversational guide for students who do not know what roles exist, let alone which one fits them.',
+      year: '2024',
+      status: 'PROTOTYPE',
+      art: 'advisor',
     },
   ],
 }
 
+// ── 07 / THE RECEIPTS ────────────────────────────────────────────────────────
+// A footnote, not a trophy case. No display title by design.
 export const receipts = {
-  index: '05',
+  index: '07',
   label: 'THE RECEIPTS',
-  title: 'Experience & education.',
   rows: [
-    { left: 'ARRIVIO', mid: 'Software Developer, AI & ML', right: '2025 → NOW' },
-    { left: 'HANSI KITCHENS', mid: 'Design Intern, AutoCAD certified', right: 'INTERNSHIP' },
-    { left: 'B.TECH / CSE', mid: 'Artificial Intelligence & Machine Learning', right: 'IN PROGRESS' },
+    { label: 'B.TECH · CSE, AI & ML', detail: 'Malla Reddy College of Engineering & Technology · 2026' },
+    { label: 'AWS ACADEMY GRADUATE', detail: 'Machine Learning Foundations' },
+    { label: 'DEEPLEARNING.AI', detail: 'AI For Everyone' },
+    { label: 'INFOSYS', detail: 'Generative AI · Deep Learning for Developers · AI Primer' },
+    { label: 'LANGUAGES', detail: 'Telugu · Hindi · English · Japanese' },
   ],
 }
 
+// ── 08 / SAY HI ──────────────────────────────────────────────────────────────
 export const contact = {
-  index: '06',
+  index: '08',
   label: 'SAY HI',
   kicker: 'AVAILABLE FOR WORK, COLLABS & WILD IDEAS',
   lineA: "LET'S",
   lineB: 'TALK',
   links: [
     { label: 'LINKEDIN', href: 'https://www.linkedin.com/in/tej--prakash/' },
-    { label: 'GITHUB', href: 'https://github.com/tej-prakash' },
+    { label: 'GITHUB', href: 'https://github.com/parvathamtej' },
+    // Drop the PDF at public/tej-prakash-resume.pdf, then uncomment:
+    // { label: 'RÉSUMÉ', href: '/tej-prakash-resume.pdf', download: true },
     { label: 'MORE ABOUT ME', href: 'https://tej--portfolio.web.app/' },
   ],
   credit: 'DESIGNED & BUILT BY TEJ PRAKASH',

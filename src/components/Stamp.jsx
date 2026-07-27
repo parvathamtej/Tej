@@ -3,14 +3,15 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin'
+import { SCRAMBLE_CHARS as GLYPHS } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, ScrambleTextPlugin)
 
-const GLYPHS = '01<>[]#%/█▓▒'
-
-// Status stamp: acid chip that "decrypts" into view on scroll and re-scrambles
-// when its row is hovered. Renders full text by default (reduced-motion safe).
-export default function Stamp({ text, className = '' }) {
+// Status stamp: decrypts into view on scroll and re-scrambles when its row is
+// hovered. Renders full text by default (reduced-motion safe).
+//   variant="chip" (default) — bordered accent chip, for statuses and stats
+//   variant="bare"           — mono accent text, no border, for list labels
+export default function Stamp({ text, className = '', variant = 'chip' }) {
   const ref = useRef(null)
 
   useGSAP(
@@ -40,10 +41,15 @@ export default function Stamp({ text, className = '' }) {
     { scope: ref },
   )
 
+  const chip =
+    variant === 'bare'
+      ? 'text-[var(--accent-ui)] group-hover:text-[var(--bg-page)]'
+      : 'border border-[var(--accent-ui)] px-2.5 py-1.5 text-[var(--accent-ui)] group-hover:border-[var(--bg-page)] group-hover:text-[var(--bg-page)]'
+
   return (
     <span
       ref={ref}
-      className={`mono-label inline-block border border-[var(--accent-ui)] px-2.5 py-1.5 !text-[0.8rem] font-bold text-[var(--accent-ui)] group-hover:border-[var(--bg-page)] group-hover:text-[var(--bg-page)] ${className}`}
+      className={`mono-label inline-block !text-[0.8rem] font-bold ${chip} ${className}`}
     >
       {text}
     </span>

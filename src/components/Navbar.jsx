@@ -1,9 +1,9 @@
 import { identity } from '../data/content'
 
 const LINKS = [
-  { label: 'ABOUT', target: '#about' },
-  { label: 'WORK', target: '#work' },
+  { label: 'WORK', target: '#arrivio' },
   { label: 'STACK', target: '#stack' },
+  { label: 'PROJECTS', target: '#work', desktopOnly: true },
   { label: 'CONTACT', target: 'bottom' },
 ]
 
@@ -47,7 +47,9 @@ export default function Navbar() {
               href={l.target === 'bottom' ? '#contact' : l.target}
               onClick={(e) => go(e, l.target)}
               data-cursor=""
-              className="mono-label transition-opacity duration-200 hover:opacity-60"
+              className={`mono-label transition-opacity duration-200 hover:opacity-60 ${
+                l.desktopOnly ? 'hidden md:inline' : ''
+              }`}
             >
               {l.label}
             </a>

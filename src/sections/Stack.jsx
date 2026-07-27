@@ -4,14 +4,15 @@ import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import ChapterHead from '../components/ChapterHead'
 import { stack } from '../data/content'
-import { DUR_S, EASE, reduced } from '../lib/motion'
+import { DUR_S, EASE } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Lives on the acid-flooded chapter (App tweens the page variables).
+// Lives on the moss-flooded chapter (App tweens the page variables).
+// No ratings, no percentages, no proficiency bars.
 export default function Stack() {
   const sectionRef = useRef(null)
-  const tickerRef = useRef(null)
+  const closerRef = useRef(null)
 
   useGSAP(
     () => {
@@ -25,32 +26,10 @@ export default function Stack() {
           stagger: 0.08,
           scrollTrigger: { trigger: sectionRef.current, start: 'top 74%', once: true },
         })
-
-        // Terminal type-on ticker, loops forever
-        const el = tickerRef.current
-        const text = stack.ticker
-        const state = { n: 0 }
         gsap
-          .timeline({ repeat: -1, repeatDelay: 1.6, scrollTrigger: { trigger: el, start: 'top 95%' } })
-          .to(state, {
-            n: text.length,
-            duration: text.length * 0.045,
-            ease: 'none',
-            snap: { n: 1 },
-            onUpdate: () => {
-              el.textContent = text.slice(0, state.n)
-            },
-          })
-          .to({}, { duration: 2.2 })
-          .to(state, {
-            n: 0,
-            duration: 0.3,
-            ease: 'none',
-            snap: { n: 1 },
-            onUpdate: () => {
-              el.textContent = text.slice(0, state.n)
-            },
-          })
+          .timeline({ scrollTrigger: { trigger: closerRef.current, start: 'top 75%', once: true } })
+          .from('.stack-closer-heading', { opacity: 0, y: 16, duration: DUR_S, ease: EASE })
+          .from('.stack-closer-line span', { yPercent: 115, duration: 1, ease: EASE }, '-=0.35')
       })
       return () => mm.revert()
     },
@@ -64,17 +43,22 @@ export default function Stack() {
         {stack.rows.map((row) => (
           <li
             key={row.label}
-            className="stack-row hairline-t -mx-3 grid grid-cols-1 items-baseline gap-1 px-3 py-6 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:grid-cols-[11rem_1fr] md:gap-4 md:py-7"
+            className="stack-row group hairline-t -mx-3 grid grid-cols-1 items-baseline gap-1 px-3 py-6 transition-colors duration-200 hover:bg-[var(--fg-page)] hover:text-[var(--bg-page)] md:grid-cols-[11rem_1fr] md:gap-4 md:py-7"
           >
             <p className="mono-label opacity-60">{row.label}</p>
-            <p className="display-type text-[clamp(1.25rem,2.5vw,2.1rem)]">{row.items}</p>
+            <p className="text-[clamp(1.05rem,1.5vw,1.35rem)] leading-relaxed">{row.items}</p>
           </li>
         ))}
       </ul>
-      <p className="mono-label mt-14 opacity-80">
-        <span ref={tickerRef}>{reduced() ? stack.ticker : ''}</span>
-        <span className="ticker-caret">▌</span>
-      </p>
+
+      <div ref={closerRef} className="hairline-t mt-[clamp(4rem,10vh,7rem)] pt-8">
+        <p className="stack-closer-heading mono-label text-[var(--accent-ui)]">
+          {stack.closer.heading}
+        </p>
+        <p className="stack-closer-line display-type mt-5 block max-w-[20ch] overflow-hidden pb-[0.1em] -mb-[0.1em] text-[clamp(1.8rem,4.2vw,3.4rem)]">
+          <span className="inline-block will-change-transform">{stack.closer.line}</span>
+        </p>
+      </div>
     </section>
   )
 }

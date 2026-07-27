@@ -8,10 +8,11 @@
   --color-acid: #c8f04b;
   --color-acid-deep: #a8d62f;
 
-  --font-display: "Clash Display", "General Sans", sans-serif;
-  --font-body: "General Sans", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-serif: "Gambetta", Georgia, serif;
+  /* Editorial serif display against a pixel-precise mono HUD. The contrast is
+     the point: the serif reads considered, the mono reads technical. */
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-body: "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
 :root {
@@ -61,21 +62,30 @@ body {
   outline-offset: 3px;
 }
 
+/* Instrument Serif ships one weight and an italic. Hierarchy comes from size
+   and space, never weight. CASE IS CARRIED BY content.js, not by CSS. */
 @utility display-type {
   font-family: var(--font-display);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: -0.02em;
-  line-height: 0.92;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 0.96;
+}
+
+/* All-caps display needs air where sentence case needs tightening. */
+@utility display-caps {
+  letter-spacing: 0;
 }
 
 @utility serif-accent {
-  font-family: var(--font-serif);
   font-style: italic;
-  font-weight: 400;
-  text-transform: none;
   letter-spacing: 0;
   line-height: inherit;
+}
+
+/* Long-form prose. Light type on dark reads lighter and needs the room. */
+@utility prose-measure {
+  max-width: 62ch;
+  line-height: 1.6;
 }
 
 @utility mono-label {
@@ -90,18 +100,7 @@ body {
   border-top: 1px solid var(--hair);
 }
 
-/* Word-illumination initial state (Manifesto) — visible-by-default at low opacity */
-.m-word {
-  opacity: 0.16;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .m-word {
-    opacity: 1;
-  }
-}
-
-/* Work hover-preview gradient art — one visual world per project, no images */
+/* Work hover-preview gradient art. One visual world per project, no images. */
 .art-kiosk {
   background:
     radial-gradient(circle at 30% 35%, #c8f04b 0, transparent 42%),
@@ -115,7 +114,7 @@ body {
     repeating-linear-gradient(0deg, transparent 0 28px, rgba(200, 240, 75, 0.28) 28px 29px),
     linear-gradient(135deg, #161613 0%, #0e0e0c 55%, rgba(200, 240, 75, 0.3) 100%);
 }
-.art-data {
+.art-advisor {
   background: conic-gradient(
     from 210deg at 60% 40%,
     #0e0e0c 0deg,
@@ -124,6 +123,26 @@ body {
     rgba(200, 240, 75, 0.4) 290deg,
     #0e0e0c 360deg
   );
+}
+/* Stacked pages with a retrieval glow */
+.art-rag {
+  background:
+    linear-gradient(115deg, transparent 44%, rgba(200, 240, 75, 0.5) 45%, transparent 46%),
+    linear-gradient(115deg, transparent 58%, rgba(200, 240, 75, 0.3) 59%, transparent 60%),
+    radial-gradient(ellipse at 68% 62%, rgba(200, 240, 75, 0.45) 0, transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 14px, rgba(237, 234, 227, 0.07) 14px 15px),
+    #131311;
+}
+/* Waveform bars fading into a render */
+.art-speech {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(200, 240, 75, 0.55) 0 3px,
+      transparent 3px 11px
+    ),
+    linear-gradient(180deg, transparent 34%, #0e0e0c 36%, #0e0e0c 64%, transparent 66%),
+    linear-gradient(90deg, #161613 0%, rgba(200, 240, 75, 0.22) 100%);
 }
 
 /* Hero's slow-rotating star */
