@@ -32,17 +32,23 @@ export const preloader = {
 // These stay company-specific (unlike the section kickers, which mark the three
 // experience chapters as one run) because the HUD and rail are navigation: a
 // reader needs to know WHICH chapter they are in, not just its category.
+// `n` is the counter position shown in the HUD. INTRO and SAY HI have none:
+// the page never numbers them, and a HUD reading "03 / 09" while the section
+// kicker on the same screen reads "02 / EXPERIENCE" is the confusion to avoid.
+// The progress ticks navigate to all nine; only these seven are counted.
 export const chapters = [
-  '00 / INTRO',
-  '01 / HOW I WORK',
-  '02 / ARRIVIO',
-  '03 / GLOBALLOGIC',
-  '04 / HANSI',
-  '05 / SKILLS',
-  '06 / PROJECTS',
-  '07 / BACKGROUND',
-  '08 / SAY HI',
+  { name: 'INTRO', target: '#top' },
+  { name: 'HOW I WORK', n: 1, target: '#pattern' },
+  { name: 'ARRIVIO', n: 2, target: '#arrivio' },
+  { name: 'GLOBALLOGIC', n: 3, target: '#globallogic' },
+  { name: 'HANSI', n: 4, target: '#hansi' },
+  { name: 'SKILLS', n: 5, target: '#stack' },
+  { name: 'PROJECTS', n: 6, target: '#work' },
+  { name: 'BACKGROUND', n: 7, target: '#receipts' },
+  { name: 'SAY HI', target: 'bottom' },
 ]
+
+export const CHAPTER_TOTAL = 7
 
 // (The V7 "THE WORK" divider is deleted. The HUD and chapter rail already tell
 // the reader they have moved into a new chapter, and the dossier's own rail
@@ -63,9 +69,13 @@ export const pattern = {
   heading: ['Three companies. The same problem.'],
   // The one deck that survives: it explains a heading that cannot stand alone.
   deck: 'Every one of them had somebody doing by hand what a system should have been doing.',
+  // Badges are deliberately NOT parallel. Each states the strongest fact its
+  // own copy supports: GlobalLogic was demoed to stakeholders every sprint and
+  // the copy never claims production, so it does not get a "shipped" badge.
   pairs: [
     {
-      id: 'HANSI KITCHENS · 2023 · INTERIOR VISUALISATION',
+      company: 'HANSI KITCHENS · 2023',
+      badge: 'STILL IN USE',
       problem: 'Hansi could not show a client the room they were paying for.',
       solution: [
         { text: 'So I ' },
@@ -74,7 +84,8 @@ export const pattern = {
       ],
     },
     {
-      id: 'GLOBALLOGIC · 2026 · DEALER MANAGEMENT SYSTEM',
+      company: 'GLOBALLOGIC · 2026',
+      badge: '3 SPRINTS',
       problem: 'GlobalLogic had advisors filling forty fields to book one car.',
       solution: [
         { text: 'So I ' },
@@ -83,7 +94,8 @@ export const pattern = {
       ],
     },
     {
-      id: 'ARRIVIO · 2026 · DEMAND MODELLING',
+      company: 'ARRIVIO · 2026',
+      badge: 'IN PRODUCTION',
       problem: 'Arrivio could not see which market to enter next.',
       solution: [
         { text: 'So I ' },
@@ -310,8 +322,11 @@ export const credentials = {
     focus: 'Artificial Intelligence and Machine Learning',
     school: 'Malla Reddy College of Engineering and Technology · 2026',
   },
+  // "CREDENTIALS", not "CERTIFICATIONS": a section heading and its first sub
+  // heading may never share a word, and this column holds certificates from
+  // four different issuers, so it is the more accurate label anyway.
   certifications: {
-    label: 'CERTIFICATIONS',
+    label: 'CREDENTIALS',
     rows: [
       { issuer: 'AWS Academy Graduate', name: 'Machine Learning Foundations' },
       { issuer: 'DeepLearning.AI', name: 'AI For Everyone' },

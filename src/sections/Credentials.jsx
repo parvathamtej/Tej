@@ -8,11 +8,10 @@ import { DUR_S, EASE, STAGGER } from '../lib/motion'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
-// Three clearly separated blocks under one heading. Nothing below 14px in this
-// section: it failed on legibility before it failed on anything else.
-const LABEL = 'mono-label !text-[0.875rem] text-[var(--accent-ui)]'
-const ROW =
-  'grid grid-cols-1 gap-x-8 gap-y-1 border-t border-[var(--hair)] py-4 md:grid-cols-[18rem_1fr]'
+// Three columns under one heading, no sub-heading that repeats it. The degree
+// carries the most visual weight because it is the thing that matters;
+// everything else is a list. Nothing below 14px in this section.
+const COL_LABEL = 'mono-label !text-[0.875rem] text-[var(--accent-ui)]'
 
 export default function Credentials() {
   const sectionRef = useRef(null)
@@ -21,13 +20,13 @@ export default function Credentials() {
     () => {
       const mm = gsap.matchMedia()
       mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.from('.cr-block', {
+        gsap.from('.cr-col', {
           opacity: 0,
           y: 28,
           duration: DUR_S,
           ease: EASE,
           stagger: STAGGER * 2,
-          scrollTrigger: { trigger: '.cr-blocks', start: 'top 82%', once: true },
+          scrollTrigger: { trigger: '.cr-cols', start: 'top 82%', once: true },
         })
       })
       return () => mm.revert()
@@ -50,37 +49,39 @@ export default function Credentials() {
         className="mb-16"
       />
 
-      <div className="cr-blocks flex flex-col gap-12">
-        <div className="cr-block">
-          <p className={LABEL}>{education.label}</p>
-          <div className="mt-5 border-t border-[var(--hair)] pt-5">
-            <p className="display-m max-w-[22ch]">
-              {education.degree}
+      <div className="cr-cols grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8">
+        <div className="cr-col">
+          <p className={COL_LABEL}>DEGREE</p>
+          <div className="mt-6 border-t border-[var(--hair)] pt-6">
+            <p className="display-m max-w-[22ch]">{education.degree}</p>
+            <p className="body-copy mt-3 text-bone-dim">{education.focus}</p>
+            <p className="mono-label !text-[0.875rem] !normal-case mt-4 opacity-70">
+              {education.school}
             </p>
-            <p className="body-copy mt-2 text-bone-dim">{education.focus}</p>
-            <p className="mono-label !text-[0.875rem] mt-3 opacity-70">{education.school}</p>
           </div>
         </div>
 
-        <div className="cr-block">
-          <p className={LABEL}>{certifications.label}</p>
-          <ul className="mt-5">
+        <div className="cr-col">
+          <p className={COL_LABEL}>{certifications.label}</p>
+          <ul className="mt-6 flex flex-col gap-5 border-t border-[var(--hair)] pt-6">
             {certifications.rows.map((r) => (
-              <li key={`${r.issuer}-${r.name}`} className={ROW}>
-                <span className="mono-label !text-[0.875rem] opacity-70">{r.issuer}</span>
-                <span className="text-[1rem] leading-snug">{r.name}</span>
+              <li key={`${r.issuer}-${r.name}`}>
+                <p className="mono-label !text-[0.875rem] !normal-case opacity-70">{r.issuer}</p>
+                <p className="mt-1 text-[1rem] leading-snug">{r.name}</p>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="cr-block">
-          <p className={LABEL}>{languages.label}</p>
-          <ul className="mt-5">
+        <div className="cr-col">
+          <p className={COL_LABEL}>{languages.label}</p>
+          <ul className="mt-6 flex flex-col gap-3 border-t border-[var(--hair)] pt-6">
             {languages.rows.map((r) => (
-              <li key={r.issuer} className={ROW}>
-                <span className="mono-label !text-[0.875rem] opacity-70">{r.issuer}</span>
-                <span className="text-[1rem] leading-snug">{r.name}</span>
+              <li key={r.issuer} className="flex items-baseline justify-between gap-4">
+                <span className="text-[1rem]">{r.issuer}</span>
+                <span className="mono-label !text-[0.875rem] !normal-case opacity-70">
+                  {r.name}
+                </span>
               </li>
             ))}
           </ul>

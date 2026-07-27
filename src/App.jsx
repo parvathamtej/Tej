@@ -9,7 +9,6 @@ import Cursor from './components/Cursor'
 import Progress from './components/Progress'
 import Navbar from './components/Navbar'
 import Hud from './components/Hud'
-import ChapterRail from './components/ChapterRail'
 import Hero from './sections/Hero'
 import Pattern from './sections/Pattern'
 import CaseStudy from './sections/CaseStudy'
@@ -102,7 +101,6 @@ export default function App() {
       <Progress />
       <Navbar />
       <Hud />
-      <ChapterRail />
       <main
         className="site-main relative z-10 mb-[100dvh]"
         style={{ background: 'var(--bg-page)' }}

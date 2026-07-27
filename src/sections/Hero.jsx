@@ -70,9 +70,14 @@ export default function Hero({ started }) {
   )
 
   return (
-    <section ref={sectionRef} id="top" className="relative flex min-h-dvh flex-col">
-      <div ref={innerRef} className="flex flex-1 flex-col px-5 pt-28 md:px-8">
-        <h1 className="display-xl mt-auto" aria-label={name}>
+    <section ref={sectionRef} id="top" className="relative min-h-dvh">
+      {/* Optical centre at ~42% of the viewport: weighting the group slightly
+          above true centre is what actually reads as centred. */}
+      <div
+        ref={innerRef}
+        className="absolute inset-x-0 top-[42%] -translate-y-1/2 px-5 md:px-8"
+      >
+        <h1 className="display-xl" aria-label={name}>
           <span className="block overflow-hidden pb-[0.08em] -mb-[0.08em]">
             {name.split('').map((c, i) => (
               <span key={i} className="hero-char inline-block will-change-transform" aria-hidden="true">
@@ -91,31 +96,36 @@ export default function Hero({ started }) {
           </span>
         </h1>
 
-        <div className="mt-10 pb-16">
-          <div className="hero-soft deck">
-            {identity.statement.map((line) => (
-              <span key={line} className="block">
-                {line}
-              </span>
-            ))}
-          </div>
-          {/* Below the statement, quiet mono; only the company names carry acid */}
-          <p className="hero-soft mono-label !normal-case mt-8 opacity-60">
-            {identity.credential.split(/(Arrivio|GlobalLogic)/).map((part, i) =>
-              part === 'Arrivio' || part === 'GlobalLogic' ? (
-                <span key={i} className="text-acid">
-                  {part}
-                </span>
-              ) : (
-                <span key={i}>{part}</span>
-              ),
-            )}
-          </p>
-          <p className="hero-soft mono-label !normal-case mt-1.5 opacity-60">{identity.location}</p>
+        {/* One tight group: 32px between name, statement and role line. The
+            statement gets its own measure, wide enough that the three lines
+            break where they were written to break, without touching the
+            global deck step. */}
+        <div className="hero-soft deck mt-8 !max-w-[46ch]">
+          {identity.statement.map((line) => (
+            <span key={line} className="block">
+              {line}
+            </span>
+          ))}
         </div>
-
-        <p className="hero-soft mono-label pb-10 opacity-60">SCROLL ↓</p>
+        {/* Quiet mono below the statement; only the company names carry acid */}
+        <p className="hero-soft mono-label !normal-case mt-8 opacity-60">
+          {identity.credential.split(/(Arrivio|GlobalLogic)/).map((part, i) =>
+            part === 'Arrivio' || part === 'GlobalLogic' ? (
+              <span key={i} className="text-acid">
+                {part}
+              </span>
+            ) : (
+              <span key={i}>{part}</span>
+            ),
+          )}
+          <span className="ml-2 opacity-70">{identity.location}</span>
+        </p>
       </div>
+
+      {/* Outside the group, pinned to the bottom-left of the viewport */}
+      <p className="hero-soft mono-label absolute bottom-16 left-5 opacity-60 md:left-8">
+        SCROLL ↓
+      </p>
     </section>
   )
 }

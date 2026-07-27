@@ -18,6 +18,9 @@ export default function Stack() {
     () => {
       const mm = gsap.matchMedia()
       mm.add('(prefers-reduced-motion: no-preference)', () => {
+        // The rows carry a CSS `transition: opacity` for the hover dim, which
+        // would re-smooth every frame GSAP writes and fight its easing. Suspend
+        // it for the duration of the entrance, then hand it back to CSS.
         gsap.from('.stack-row', {
           opacity: 0,
           y: 40,
@@ -25,6 +28,22 @@ export default function Stack() {
           ease: EASE,
           stagger: STAGGER,
           scrollTrigger: { trigger: '.stack-list', start: 'top 80%', once: true },
+          onStart() {
+            this.targets().forEach((t) => {
+              t.style.transition = 'none'
+            })
+          },
+          onComplete() {
+            // Hand opacity back to CSS completely. Leaving an inline `1` behind
+            // means the restored transition starts a fresh 300ms flight toward
+            // a value it is already at, so the row can be caught mid-transition
+            // by anything that samples it. Clearing the prop leaves exactly one
+            // owner of opacity at rest: the stylesheet.
+            this.targets().forEach((t) => {
+              t.style.transition = ''
+            })
+            gsap.set(this.targets(), { clearProps: 'opacity' })
+          },
         })
       })
       return () => mm.revert()

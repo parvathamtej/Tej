@@ -2,7 +2,6 @@ import { useMemo, useRef } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import SectionHeading from '../components/SectionHeading'
 import { pattern, patternVisuals } from '../data/content'
 import { DUR, EASE, MM, mulberry32 } from '../lib/motion'
 
@@ -200,83 +199,90 @@ function addBeatVisual(tl, root, beat, at, len) {
 }
 
 // ─── 01 / HOW I WORK ─────────────────────────────────────────────────────────
+// The heading NEVER MOVES. It is frozen in the left column for the whole
+// section, so the reader always knows which argument they are inside, and the
+// counter and dots say how much of it is left. Only the right column advances:
+// company, badge, the sentence pair and the visual swap together as one unit.
+// State 4 resolves the right column to the payoff, so the conclusion lands in
+// the same place the evidence did instead of on a screen of its own.
 export default function Pattern() {
   const rootRef = useRef(null)
   const deskRef = useRef(null)
   const pinRef = useRef(null)
-  const payoffRef = useRef(null)
+  const dotsRef = useRef(null)
+  const counterRef = useRef(null)
+  const payoffMobRef = useRef(null)
+
+  const STATES = pattern.pairs.length + 1 // three beats plus the payoff
 
   useGSAP(
     () => {
       const mm = gsap.matchMedia()
 
       mm.add(MM.desk, () => {
-        // Scope to the desktop grid: the mobile layout renders its own copies
-        // of these classes, and a document-wide selector would mix them.
         if (!deskRef.current || !pinRef.current) return
         const q = gsap.utils.selector(deskRef.current)
-        const pairs = q('.pt-pair')
+        const panels = q('.pt-panel') // 3 beats + payoff
         const visuals = q('.pt-visual')
-        const n = pairs.length
+        const dots = dotsRef.current ? [...dotsRef.current.children] : []
+        const counter = counterRef.current
 
-        // Visibility is discrete and derived from progress every frame, never
-        // from tweens inside the scrubbed timeline. Exactly one beat can be
-        // visible, at any scroll position, in either direction.
-        gsap.set(pairs, { autoAlpha: 0, y: 28 })
+        gsap.set(panels, { autoAlpha: 0, y: 24 })
         gsap.set(visuals, { autoAlpha: 0 })
-        gsap.set([pairs[0], visuals[0]], { autoAlpha: 1, y: 0 })
-
-        // The payoff lands at the bottom of this column once the third beat has
-        // resolved, rather than owning a centred screen of its own. It occupies
-        // its space from the start (visibility, not display) so nothing reflows.
-        const payoff = q('.pt-payoff')[0]
-        gsap.set(payoff, { autoAlpha: 0 })
+        gsap.set([panels[0], visuals[0]], { autoAlpha: 1, y: 0 })
 
         let current = 0
         const show = (idx) => {
           if (idx === current) return
-          pairs.forEach((el, i) => {
+          panels.forEach((el, i) =>
             gsap.to(el, {
               autoAlpha: i === idx ? 1 : 0,
-              y: i === idx ? 0 : i < idx ? -28 : 28,
+              y: i === idx ? 0 : i < idx ? -24 : 24,
               duration: 0.4,
               ease: EASE,
               overwrite: 'auto',
-            })
-          })
-          visuals.forEach((el, i) => {
+            }),
+          )
+          // The payoff state keeps the last visual on screen behind it
+          const vIdx = Math.min(idx, visuals.length - 1)
+          visuals.forEach((el, i) =>
             gsap.to(el, {
-              autoAlpha: i === idx ? 1 : 0,
+              autoAlpha: i === vIdx ? 1 : 0,
               duration: 0.4,
               ease: EASE,
               overwrite: 'auto',
-            })
+            }),
+          )
+          dots.forEach((d, i) => {
+            d.textContent = i <= idx ? '●' : '○'
+            d.classList.toggle('text-acid', i <= idx)
           })
+          if (counter) {
+            const isPayoff = idx >= pattern.pairs.length
+            counter.textContent = isPayoff
+              ? ''
+              : `0${idx + 1} / 0${pattern.pairs.length}`
+          }
           current = idx
         }
-        const showPayoff = (on) =>
-          gsap.to(payoff, { autoAlpha: on ? 1 : 0, duration: 0.5, ease: EASE, overwrite: 'auto' })
 
-        // The scrubbed timeline carries ONLY the visual animations.
         const tl = gsap.timeline({
           scrollTrigger: {
-            // The pinned stage is the trigger, not the section: the heading
-            // block above must scroll away before the pin engages.
             trigger: pinRef.current,
             start: 'top top',
-            end: '+=300%',
+            end: `+=${STATES * 90}%`,
             scrub: 1,
             pin: pinRef.current,
             pinSpacing: true,
             invalidateOnRefresh: true,
-            onUpdate: (self) => {
-              show(gsap.utils.clamp(0, n - 1, Math.floor(self.progress * n)))
-              showPayoff(self.progress > 0.9)
-            },
+            onUpdate: (self) =>
+              show(gsap.utils.clamp(0, STATES - 1, Math.floor(self.progress * STATES))),
           },
         })
-        tl.set({}, {}, n) // hold the full duration
-        for (let i = 0; i < n; i++) addBeatVisual(tl, visuals[i], i, i + 0.08, 0.84)
+        tl.set({}, {}, STATES)
+        for (let i = 0; i < pattern.pairs.length; i++) {
+          addBeatVisual(tl, visuals[i], i, i + 0.08, 0.84)
+        }
       })
 
       mm.add(MM.mob, () => {
@@ -286,25 +292,21 @@ export default function Pattern() {
           })
           addBeatVisual(tl, block.querySelector('.pt-visual'), i, 0, 1)
         })
-      })
-
-      mm.add(MM.mob, () => {
-        // No pin on mobile, so the payoff simply reveals after the last beat.
-        if (!payoffRef.current) return
-        gsap.from(payoffRef.current, {
-          autoAlpha: 0,
-          y: 20,
-          duration: DUR,
-          ease: EASE,
-          scrollTrigger: { trigger: payoffRef.current, start: 'top 85%', once: true },
-        })
+        if (payoffMobRef.current) {
+          gsap.from(payoffMobRef.current, {
+            autoAlpha: 0,
+            y: 20,
+            duration: DUR,
+            ease: EASE,
+            scrollTrigger: { trigger: payoffMobRef.current, start: 'top 85%', once: true },
+          })
+        }
       })
 
       mm.add(MM.reduce, () => {
-        // A plain vertical document: every beat visible, nothing pinned.
         if (!rootRef.current) return
         const q = gsap.utils.selector(rootRef.current)
-        gsap.set(q('.pt-pair, .pt-visual, .pv-input, .pt-payoff'), { autoAlpha: 1, y: 0 })
+        gsap.set(q('.pt-panel, .pt-visual, .pv-input'), { autoAlpha: 1, y: 0 })
         gsap.set(q('.pv-wipe, .pv-sentence'), { clipPath: 'inset(0% 0% 0% 0%)' })
         gsap.set(q('.pv-divider'), { left: '50%' })
         q('.pv-hex').forEach((h) => gsap.set(h, { opacity: Number(h.dataset.weight) }))
@@ -316,78 +318,107 @@ export default function Pattern() {
     { scope: rootRef },
   )
 
-  // The pair is one typographic unit, so it is sized by its LONGEST line
-  // (61 characters), which the length table puts at display-s. Sizing the two
-  // lines independently would split a single thought across two steps.
-  const Pair = ({ pair }) => (
+  // The frozen column. Rendered once for desktop, once for the mobile header.
+  const Frozen = ({ withDots }) => (
     <>
-      <p className="display-s max-w-[30ch]">{pair.problem}</p>
-      <p className="display-s mt-6 max-w-[30ch]">
+      <p className="mono-label text-[var(--accent-ui)]">
+        {pattern.index} / {pattern.category}
+      </p>
+      <h2 className="display-m mt-6 max-w-[22ch]">{pattern.heading[0]}</h2>
+      <p className="deck mt-6 text-bone-dim">{pattern.deck}</p>
+      {withDots ? (
+        <p ref={dotsRef} aria-hidden="true" className="mono-label mt-12 flex gap-3">
+          {pattern.pairs.map((p, i) => (
+            <span key={p.company} className={i === 0 ? 'text-acid' : ''}>
+              {i === 0 ? '●' : '○'}
+            </span>
+          ))}
+        </p>
+      ) : null}
+    </>
+  )
+
+  const BeatText = ({ pair }) => (
+    <>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <p className="mono-label opacity-70">{pair.company}</p>
+        <span className="mono-label !text-[0.7rem] border border-[var(--accent-ui)] px-2 py-1 font-medium text-[var(--accent-ui)]">
+          {pair.badge}
+        </span>
+      </div>
+      <p className="display-s mt-6 max-w-[30ch]">{pair.problem}</p>
+      <p className="display-s mt-4 max-w-[30ch]">
         {pair.solution.map((seg, s) => (
           <span key={s} className={seg.accent ? 'text-acid' : undefined}>
             {seg.text}
           </span>
         ))}
       </p>
-      <p className="mono-label mt-8 opacity-60">{pair.id}</p>
+    </>
+  )
+
+  const Payoff = () => (
+    <>
+      <p className="display-m max-w-[22ch] text-acid">{pattern.payoff.lead}</p>
+      <p className="deck mt-6 text-bone-dim">{pattern.payoff.line}</p>
     </>
   )
 
   return (
     <section id="pattern" ref={rootRef} className="relative z-[5] bg-ink">
-      {/* Heading in normal document flow: a reader sees what this section is
-          before the beats start. It scrolls away before the pin engages. */}
-      <div className="px-5 pb-16 pt-16 md:px-8 md:pb-16 md:pt-32">
-        <SectionHeading
-          index={pattern.index}
-          category={pattern.category}
-          heading={pattern.heading}
-          deck={pattern.deck}
-          size="xl"
-        />
-      </div>
-
-      {/* Desktop: pinned split screen. Top padding clears the fixed navbar and
-          both columns clip, so outgoing lines can never render through it. */}
+      {/* Desktop: the whole section pins. Nothing scrolls away. */}
       <div ref={pinRef} className="hidden h-dvh md:block">
-        <div ref={deskRef} className="grid h-full grid-cols-[42%_58%] gap-12 px-8 pb-12 pt-[7.5rem]">
-          <div className="relative flex flex-col overflow-hidden">
-            <div className="relative flex-1">
+        <div
+          ref={deskRef}
+          className="grid h-full grid-cols-[38%_62%] gap-12 px-8 pb-12 pt-[7.5rem]"
+        >
+          {/* Frozen for the entire section */}
+          <div className="flex flex-col justify-center">
+            <Frozen withDots />
+          </div>
+
+          {/* Advances: one unit of company, badge, sentences and visual */}
+          <div className="flex min-h-0 flex-col">
+            <p
+              ref={counterRef}
+              aria-hidden="true"
+              className="mono-label shrink-0 self-end text-[var(--accent-ui)]"
+            >
+              01 / 0{pattern.pairs.length}
+            </p>
+
+            {/* Text is capped and scrolls internally; the visual never compresses */}
+            <div className="relative mt-4 min-h-0 flex-1 overflow-y-auto">
               {pattern.pairs.map((pair) => (
-                <div
-                  key={pair.id}
-                  className="pt-pair absolute inset-0 flex flex-col items-start justify-center will-change-transform"
-                >
-                  <Pair pair={pair} />
+                <div key={pair.company} className="pt-panel absolute inset-x-0 top-0">
+                  <BeatText pair={pair} />
+                </div>
+              ))}
+              <div className="pt-panel absolute inset-x-0 top-0">
+                <Payoff />
+              </div>
+            </div>
+
+            <div className="relative mt-8 min-h-[480px] shrink-0 overflow-hidden border border-[var(--hair)]">
+              {VISUALS.map((V, i) => (
+                <div key={i} className="pt-visual absolute inset-0">
+                  <V />
                 </div>
               ))}
             </div>
-            {/* The argument finishes here, flush on the same 32px edge, rather
-                than on a centred screen of its own restating what was just
-                shown three times. */}
-            <div className="pt-payoff shrink-0 pb-2">
-              <p className="display-m text-acid">{pattern.payoff.lead}</p>
-              <p className="deck mt-6 text-bone-dim">{pattern.payoff.line}</p>
-            </div>
-          </div>
-          <div className="relative overflow-hidden">
-            {VISUALS.map((V, i) => (
-              <div key={i} className="pt-visual absolute inset-0">
-                <V />
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* Mobile: stacked beats, no pin. The payoff closes the run in flow. */}
-      <div className="px-5 pb-16 md:hidden">
+      {/* Mobile: no pin, the frozen column becomes a static header */}
+      <div className="px-5 pb-16 pt-16 md:hidden">
+        <Frozen />
         {pattern.pairs.map((pair, i) => {
           const V = VISUALS[i]
           return (
-            <div key={pair.id} className="pt-beat py-12">
-              <div className="pt-pair">
-                <Pair pair={pair} />
+            <div key={pair.company} className="pt-beat py-12">
+              <div className="pt-panel">
+                <BeatText pair={pair} />
               </div>
               <div className="pt-visual relative mt-8 h-[46vh] overflow-hidden border border-[var(--hair)]">
                 <V />
@@ -395,9 +426,8 @@ export default function Pattern() {
             </div>
           )
         })}
-        <div ref={payoffRef} className="pt-payoff pt-4">
-          <p className="display-m text-acid">{pattern.payoff.lead}</p>
-          <p className="deck mt-6 text-bone-dim">{pattern.payoff.line}</p>
+        <div ref={payoffMobRef} className="pt-panel pt-4">
+          <Payoff />
         </div>
       </div>
     </section>

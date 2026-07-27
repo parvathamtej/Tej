@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { startInvisibilityAudit } from '../lib/invisibilityAudit'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -19,6 +20,9 @@ export default function SmoothScroll({ children }) {
 
     // Pins/scrubs measure wrong if fonts swap in after setup
     document.fonts.ready.then(() => ScrollTrigger.refresh())
+
+    // Dev-only: catches text left invisible with no trigger to restore it
+    startInvisibilityAudit()
 
     return () => {
       gsap.ticker.remove(raf)
