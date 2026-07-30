@@ -351,13 +351,53 @@ body {
    saturate; the cost of a backdrop filter scales with its area and radius, and
    this is a short bar rather than a full-width sheet. */
 .nav-glass {
-  background: color-mix(in srgb, var(--bg-page) 58%, transparent);
-  backdrop-filter: blur(14px) saturate(135%);
-  -webkit-backdrop-filter: blur(14px) saturate(135%);
-  border: 1px solid color-mix(in srgb, var(--fg-page) 12%, transparent);
+  position: relative;
+  background: color-mix(in srgb, var(--bg-page) 62%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--fg-page) 10%, transparent);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in srgb, var(--fg-page) 10%, transparent),
-    0 12px 34px -16px rgb(0 0 0 / 0.75);
+    /* The lit top edge. A single inset hairline reads as flat plastic; a
+       highlight that is brightest at the crown and fades toward the sides is
+       what makes a capsule read as a curved, physical object. */
+    inset 0 1px 0 0 color-mix(in srgb, var(--fg-page) 16%, transparent),
+    inset 0 -1px 0 0 color-mix(in srgb, var(--bg-page) 60%, transparent),
+    0 1px 1px 0 rgb(0 0 0 / 0.28),
+    0 18px 44px -20px rgb(0 0 0 / 0.85);
+}
+/* The crown: a short bright arc across the top, fading out at both ends. */
+.nav-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding-top: 1px;
+  background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--fg-page) 34%, transparent) 22%,
+      color-mix(in srgb, var(--fg-page) 44%, transparent) 50%,
+      color-mix(in srgb, var(--fg-page) 34%, transparent) 78%,
+      transparent 100%
+    )
+    top / 100% 1px no-repeat;
+  pointer-events: none;
+}
+
+/* Links get a surface only when pointed at or stood on, the way a macOS
+   segmented control does. Colour alone is not enough feedback at this size. */
+.nav-link {
+  position: relative;
+  transition:
+    background-color 0.22s ease,
+    color 0.22s ease;
+}
+.nav-link:hover {
+  background: color-mix(in srgb, var(--fg-page) 9%, transparent);
+}
+.nav-link.is-here {
+  background: color-mix(in srgb, var(--fg-page) 7%, transparent);
+  color: var(--accent-ui);
 }
 /* No backdrop support (or a browser that would paint it opaque): fall back to a
    solid-enough surface rather than unreadable text over live content. */

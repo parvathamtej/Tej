@@ -69,8 +69,12 @@ export default function Progress() {
     // and navigation are one object instead of two strips competing at the top
     // of the screen. Inset to clear the pill's corner radius, and rounded so it
     // reads as part of the same shape.
-    <div className="group/bar pointer-events-none absolute inset-x-6 bottom-[3px] z-[2] md:inset-x-8">
-      <div className="relative h-[2px] w-full overflow-visible rounded-full bg-[rgba(237,234,227,0.16)] transition-all duration-300 group-hover/bar:h-[4px]">
+    // A hairline along the capsule's lower edge. At 2px with nine visible
+    // notches it was an instrument bolted to a piece of jewellery; at 1px, with
+    // the notches held at low contrast until pointed at, it reads as part of
+    // the object and still carries the whole page's structure.
+    <div className="group/bar pointer-events-none absolute inset-x-10 bottom-[5px] z-[2] md:inset-x-14">
+      <div className="relative h-px w-full overflow-visible rounded-full bg-[color-mix(in_srgb,var(--fg-page)_14%,transparent)] transition-all duration-300 group-hover/bar:h-[2px]">
         <div
           ref={barRef}
           aria-hidden="true"
@@ -88,9 +92,12 @@ export default function Progress() {
               className="group/tick pointer-events-auto absolute -top-2 block h-6 w-5 -translate-x-1/2"
               style={{ left: '0%' }}
             >
-              {/* The notch: a gap that segments the bar into chapters */}
-              <span className="absolute left-1/2 top-2 block h-[2px] w-[3px] -translate-x-1/2 bg-[var(--bg-page)] transition-all duration-300 group-hover/bar:h-[4px]" />
-              <span className="absolute left-1/2 top-2 block h-[2px] w-px -translate-x-1/2 bg-[rgba(237,234,227,0.5)] transition-all duration-200 group-hover/tick:bg-acid group-hover/bar:h-[4px]" />
+              {/* The notch: a gap that segments the line into chapters. Hidden
+                  at rest, because permanent gaps turn the hairline into a
+                  dashed rule that reads as a rendering fault rather than an
+                  instrument. Pointing at the bar reveals the structure. */}
+              <span className="absolute left-1/2 top-2 block h-px w-[3px] -translate-x-1/2 bg-[var(--bg-page)] opacity-0 transition-all duration-300 group-hover/bar:opacity-90 group-hover/bar:h-[2px]" />
+              <span className="absolute left-1/2 top-2 block h-px w-px -translate-x-1/2 bg-[color-mix(in_srgb,var(--fg-page)_45%,transparent)] opacity-0 transition-all duration-200 group-hover/bar:opacity-100 group-hover/tick:!bg-[var(--accent-ui)] group-hover/bar:h-[2px]" />
               {/* Label pill on tick hover, below the bar and clear of the pill */}
               <span
                 data-audit-ignore
