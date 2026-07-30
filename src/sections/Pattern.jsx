@@ -409,7 +409,7 @@ export default function Pattern() {
 
           {/* One bordered card: the changing states read as a single object
               swapping content, with the counter chip inside its frame. */}
-          <div className="relative flex min-h-0 flex-col border border-[var(--hair)] bg-[rgba(237,234,227,0.02)] p-6 lg:p-8">
+          <div className="panel-lumen relative flex min-h-0 flex-col p-6 lg:p-8">
             <p
               ref={counterRef}
               aria-hidden="true"

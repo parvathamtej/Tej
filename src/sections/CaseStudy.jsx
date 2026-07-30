@@ -11,7 +11,7 @@ import { DUR_S, EASE, MM, STAGGER, reduced } from '../lib/motion'
 // that caused the frozen-dots bug). The other geometries and skins remain
 // defined below and in global.css as documented one-word swaps.
 const CARD_GEO_MODE = 'coverflow'
-const CARD_SKIN = 'rounded'
+const CARD_SKIN = 'lumen'
 
 // ─── Stage card geometry ─────────────────────────────────────────────────────
 // Every mode is a pure function of a card's signed offset from the active
@@ -69,13 +69,16 @@ function splitPreview(paras) {
 // One card on the dossier stage. Collapsed by default: heading + opening
 // sentences, the rest behind a real <button> with aria-expanded. The
 // GlobalLogic agent card opens expanded (strongest writing on the site).
-function Card({ card }) {
+function Card({ card, n }) {
   const [open, setOpen] = useState(card.defaultOpen || reduced())
   const [preview, rest] = splitPreview(card.paras)
   const bodyId = `cs-body-${card.key}`
   return (
     <article data-lenis-prevent
       className="cs-card no-scrollbar flex flex-col border border-[var(--hair)] p-6 md:h-full md:w-full md:flex-none md:overflow-y-auto md:p-9">
+      <span aria-hidden="true" className="card-ghost">
+        0{n}
+      </span>
       {card.heading ? (
         <h3 className="display-m max-w-[33ch] text-[var(--accent-ui)]">
           {card.heading}
@@ -148,6 +151,11 @@ export default function CaseStudy({ study }) {
       const q = gsap.utils.selector(rootRef.current)
       const mm = gsap.matchMedia()
 
+      // Which card the coverflow paint currently fronts. The spotlight driver
+      // reads it every frame. (Single dossiers render prose, no cards at all,
+      // so their spotlight context exits immediately.)
+      const live = { pos: 0 }
+
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.from(q('.cs-rail > *'), {
           opacity: 0,
@@ -174,6 +182,7 @@ export default function CaseStudy({ study }) {
           // tweens on the timeline. A tween per card per transition fought the
           // geometry function for ownership of opacity, and lost on scrub-back.
           const paint = (pos) => {
+            live.pos = pos
             for (let i = 0; i < n; i++) {
               const g = geo(i - pos)
               gsap.set(cardEls[i], {
@@ -232,6 +241,48 @@ export default function CaseStudy({ study }) {
           })
         })
       }
+
+      // Cursor spotlight on the lumen skin. Stateless per-frame, but GEOMETRIC
+      // rather than elementFromPoint: Chrome's hit-test misses elements pushed
+      // back in Z inside a preserve-3d context, so the coverflow cards are
+      // invisible to it. The active card's projected rect (getBoundingClientRect
+      // handles the 3D flattening correctly) is checked against the pointer
+      // every frame instead — same stateless guarantee, no stale glow when
+      // Lenis scrolls the page under a still cursor. Coordinates land in
+      // PIXELS compensated for the card's own scrollTop so the ::after layer
+      // stays aligned inside internally-scrolled cards.
+      mm.add(MM.desk, () => {
+        if (!window.matchMedia('(pointer: fine)').matches) return
+        const cardEls = q('.cs-card')
+        if (!cardEls.length) return
+        const pos = { x: -1, y: -1 }
+        const onMove = (e) => {
+          pos.x = e.clientX
+          pos.y = e.clientY
+        }
+        let lit = null
+        const spot = () => {
+          const target0 = cardEls[Math.round(live.pos)]
+          let target = null
+          if (target0 && pos.x >= 0) {
+            const r = target0.getBoundingClientRect()
+            if (pos.x >= r.left && pos.x <= r.right && pos.y >= r.top && pos.y <= r.bottom) {
+              target = target0
+              target.style.setProperty('--mx', `${Math.round(pos.x - r.left + target.scrollLeft)}px`)
+              target.style.setProperty('--my', `${Math.round(pos.y - r.top + target.scrollTop)}px`)
+              target.style.setProperty('--spot', '1')
+            }
+          }
+          if (lit && lit !== target) lit.style.setProperty('--spot', '0')
+          lit = target
+        }
+        window.addEventListener('pointermove', onMove, { passive: true })
+        gsap.ticker.add(spot)
+        return () => {
+          window.removeEventListener('pointermove', onMove)
+          gsap.ticker.remove(spot)
+        }
+      })
 
       return () => mm.revert()
     },
@@ -311,7 +362,7 @@ export default function CaseStudy({ study }) {
                 className="flex flex-col gap-5 md:h-full md:flex-row motion-reduce:!flex-col"
               >
                 {cards.map((card) => (
-                  <Card key={card.key} card={card} />
+                  <Card key={card.key} card={card} n={cards.indexOf(card) + 1} />
                 ))}
               </div>
             </div>

@@ -366,6 +366,7 @@ body {
    26px reads as a decision. */
 
 .cs-card {
+  position: relative;
   transition: border-color 0.3s ease, box-shadow 0.4s ease;
   transform-style: preserve-3d;
   will-change: transform, opacity;
@@ -425,6 +426,79 @@ body {
     linear-gradient(#000 0 0);
   mask-composite: exclude;
   pointer-events: none;
+}
+
+/* lumen — the shipped skin. Spotlight-card family (Aceternity/Linear lineage)
+   adapted to this codebase's constraints:
+   · NO backdrop-filter: it glitches and stalls on 3D-rotated elements, and the
+     cards rotate in coverflow. The glass reads through layered gradients, a
+     lit top edge and an interior accent bloom instead.
+   · Edges live in border + INSET box-shadow, never a masked pseudo border:
+     shadows paint on the border box and survive internal scrolling (the agent
+     card scrolls at short viewports; a pseudo border would scroll away).
+   · The cursor spotlight (::after) is driven per-frame by JS hit-test with
+     PIXEL coords compensated for scrollTop — never :hover, which sticks when
+     Lenis moves the page under a stationary cursor. */
+.skin-lumen .cs-card {
+  border-radius: 26px;
+  border-color: color-mix(in srgb, var(--fg-page) 14%, transparent);
+  background:
+    radial-gradient(
+      120% 90% at 18% 0%,
+      color-mix(in srgb, var(--fg-page) 5%, transparent) 0%,
+      transparent 55%
+    ),
+    color-mix(in srgb, var(--bg-page) 74%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--fg-page) 20%, transparent),
+    inset 0 0 44px -18px color-mix(in srgb, var(--accent-ui) 8%, transparent),
+    0 30px 80px -32px rgb(0 0 0 / 0.9);
+}
+.skin-lumen .cs-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 40%),
+    color-mix(in srgb, var(--accent-ui) 9%, transparent),
+    transparent 72%
+  );
+  opacity: var(--spot, 0);
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+/* Ghost index numeral: structures the card's negative space */
+.card-ghost {
+  position: absolute;
+  right: 24px;
+  bottom: 4px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 100, "wght" 800;
+  font-size: clamp(5rem, 8vw, 8.5rem);
+  line-height: 1;
+  color: color-mix(in srgb, var(--fg-page) 5%, transparent);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The Pattern's single card shares the lumen surface (minus the spotlight) */
+.panel-lumen {
+  border: 1px solid color-mix(in srgb, var(--fg-page) 14%, transparent);
+  border-radius: 26px;
+  background:
+    radial-gradient(
+      120% 90% at 18% 0%,
+      color-mix(in srgb, var(--fg-page) 5%, transparent) 0%,
+      transparent 55%
+    ),
+    color-mix(in srgb, var(--bg-page) 74%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--fg-page) 20%, transparent),
+    inset 0 0 44px -18px color-mix(in srgb, var(--accent-ui) 8%, transparent),
+    0 30px 80px -32px rgb(0 0 0 / 0.9);
 }
 
 /* the stage needs depth for any of the 3D geometries to read */
