@@ -118,6 +118,31 @@ export default function DotField({
       if (ac.startsWith('#')) acid = toRgb(ac)
     }
 
+    let mask = null
+    const buildMask = () => {
+      if (W < 1 || H < 1) return
+      mask = document.createElement('canvas')
+      mask.width = W
+      mask.height = H
+      const m = mask.getContext('2d')
+      const g = m.createLinearGradient(0, 0, W * 0.66, 0)
+      g.addColorStop(0, 'rgba(0,0,0,.72)')
+      g.addColorStop(0.5, 'rgba(0,0,0,.34)')
+      g.addColorStop(1, 'rgba(0,0,0,0)')
+      m.fillStyle = g
+      m.fillRect(0, 0, W, H)
+      const vt = m.createLinearGradient(0, 0, 0, 110)
+      vt.addColorStop(0, 'rgba(0,0,0,.9)')
+      vt.addColorStop(1, 'rgba(0,0,0,0)')
+      m.fillStyle = vt
+      m.fillRect(0, 0, W, 110)
+      const vb = m.createLinearGradient(0, H - 95, 0, H)
+      vb.addColorStop(0, 'rgba(0,0,0,0)')
+      vb.addColorStop(1, 'rgba(0,0,0,.9)')
+      m.fillStyle = vb
+      m.fillRect(0, H - 95, W, 95)
+    }
+
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       W = canvas.clientWidth
@@ -126,12 +151,49 @@ export default function DotField({
       canvas.height = Math.floor(H * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       measureScope()
+      fieldAt = -1e9 // canvas size changed: the cached field no longer fits
+      buildMask()
     }
 
-    const draw = () => {
+    // The luminance field is CACHED, not recomputed per frame. Three octaves of
+    // value noise for ~5000 dots is ~60k noise evaluations, which measured at
+    // ~15ms per frame in Chrome: on its own it halved the hero's frame rate
+    // (30.8ms/frame with the canvas drawing vs 16.7ms below the fold, where the
+    // draw is skipped). The field drifts at z = T*0.045*drift, roughly 0.03 per
+    // second, so refreshing it ~15 times a second is visually identical while
+    // costing a quarter as much. The cursor bloom and displacement stay LIVE on
+    // every frame, which is the part the eye actually tracks.
+    let field = null
+    let fieldCols = 0
+    let fieldRows = 0
+    let fieldAt = -1e9
+    const FIELD_MS = 66
+
+    const buildField = (sp, z, scrollZ, contrast) => {
+      const cols = Math.ceil((W + sp) / sp)
+      const rows = Math.ceil((H + sp) / sp)
+      if (!field || cols !== fieldCols || rows !== fieldRows) {
+        fieldCols = cols
+        fieldRows = rows
+        field = new Float32Array(cols * rows)
+      }
+      let i = 0
+      for (let r = 0; r < rows; r++) {
+        const y = sp * 0.5 + r * sp
+        for (let col = 0; col < cols; col++) {
+          const x = sp * 0.5 + col * sp
+          const n = fbm(x * 0.0021 + z * 0.5, y * 0.0021 - z + scrollZ)
+          field[i++] = Math.max(0, Math.min(1, (n + 0.55) * contrast))
+        }
+      }
+    }
+
+    const draw = (now) => {
       const c = cfg.current
-      ctx.clearRect(0, 0, W, H)
-      if (c.paused) return
+      if (c.paused) {
+        ctx.clearRect(0, 0, W, H)
+        return
+      }
 
       const sp = c.spacing
       const z = T * 0.045 * c.drift
@@ -139,11 +201,28 @@ export default function DotField({
       // inside a per-frame draw that is another forced reflow.
       const scrollZ = (window.__lenis?.scroll ?? window.scrollY ?? 0) * 0.00035
 
+      let dirty = false
+      if (now - fieldAt >= FIELD_MS) {
+        buildField(sp, z, scrollZ, c.contrast)
+        fieldAt = now
+        dirty = true
+      }
+
+      const pcx = cx
+      const pcy = cy
       if (mx > -9000) {
         if (cx < -9000) { cx = mx; cy = my }
         cx += (mx - cx) * 0.12
         cy += (my - cy) * 0.12
       } else { cx = -9999; cy = -9999 }
+      // The cursor bloom is the only thing that moves between field refreshes,
+      // so if it has not moved either, this frame would be pixel-identical to
+      // the last one. Redrawing it would burn ~5000 arc() calls for nothing.
+      if (Math.abs(cx - pcx) > 0.25 || Math.abs(cy - pcy) > 0.25) dirty = true
+      if (!dirty) return
+      // Cleared only when we are about to repaint: clearing before the early
+      // return above would leave the canvas blank on every skipped frame.
+      ctx.clearRect(0, 0, W, H)
 
       const R = c.cursorRadius
       const R2 = R * R
@@ -154,11 +233,12 @@ export default function DotField({
       const pathsAcid = []
       for (let i = 0; i < BUCKETS; i++) { pathsBone.push(new Path2D()); pathsAcid.push(new Path2D()) }
 
-      for (let y = sp * 0.5; y < H + sp; y += sp) {
-        for (let x = sp * 0.5; x < W + sp; x += sp) {
-          const n = fbm(x * 0.0021 + z * 0.5, y * 0.0021 - z + scrollZ)
-          let f = n + 0.55
-          f = Math.max(0, Math.min(1, f * c.contrast))
+      for (let r = 0; r < fieldRows; r++) {
+        const y = sp * 0.5 + r * sp
+        const rowOff = r * fieldCols
+        for (let col = 0; col < fieldCols; col++) {
+          const x = sp * 0.5 + col * sp
+          const f = field[rowOff + col]
 
           let px = x, py = y, bloom = 0
           if (cx > -9000) {
@@ -192,24 +272,13 @@ export default function DotField({
         ctx.fill(pathsAcid[b])
       }
 
-      if (c.textMask) {
+      // The mask is three full-canvas gradient fills that depend only on the
+      // canvas size, so it is baked once per resize and composited as a single
+      // blit. Rebuilding the gradients and blending ~6.7M device pixels three
+      // times on every frame was a measurable part of the hero's frame cost.
+      if (c.textMask && mask) {
         ctx.globalCompositeOperation = 'destination-out'
-        const g = ctx.createLinearGradient(0, 0, W * 0.66, 0)
-        g.addColorStop(0, 'rgba(0,0,0,.72)')
-        g.addColorStop(0.5, 'rgba(0,0,0,.34)')
-        g.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = g
-        ctx.fillRect(0, 0, W, H)
-        const vt = ctx.createLinearGradient(0, 0, 0, 110)
-        vt.addColorStop(0, 'rgba(0,0,0,.9)')
-        vt.addColorStop(1, 'rgba(0,0,0,0)')
-        ctx.fillStyle = vt
-        ctx.fillRect(0, 0, W, 110)
-        const vb = ctx.createLinearGradient(0, H - 95, 0, H)
-        vb.addColorStop(0, 'rgba(0,0,0,0)')
-        vb.addColorStop(1, 'rgba(0,0,0,.9)')
-        ctx.fillStyle = vb
-        ctx.fillRect(0, H - 95, W, 95)
+        ctx.drawImage(mask, 0, 0, W, H)
         ctx.globalCompositeOperation = 'source-over'
       }
     }
@@ -270,7 +339,7 @@ export default function DotField({
       // back up resumes the noise where it left off instead of jumping.
       T += dt
       canvas.dataset.cleared = '0'
-      draw()
+      draw(now)
     }
 
     const onMove = (e) => { mx = e.clientX; my = e.clientY }

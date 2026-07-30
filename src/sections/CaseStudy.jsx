@@ -255,6 +255,9 @@ export default function CaseStudy({ study }) {
               invalidateOnRefresh: true,
             },
           })
+          // Shared with the spotlight driver so it can skip every frame in which
+          // this dossier is not the section on screen.
+          live.st = tl.scrollTrigger
           // ease: 'none', NOT the brand ease. In a SCRUBBED timeline the reader's
           // scroll is the clock, so an ease makes equal wheel movement produce
           // unequal card movement: each transition shot forward and then stalled
@@ -325,6 +328,18 @@ export default function CaseStudy({ study }) {
         let seenPos = -2
         let cool = 0
         const spot = () => {
+          // FIRST, and cheapest: if this dossier's pin is not engaged, there is
+          // no fronted card to light and nothing to do. Without this the driver
+          // kept hit-testing for all three dossiers on every frame of the entire
+          // page — a Chrome trace charged it 410ms of forced reflow while
+          // scrolling the Pattern section, where no card is even on screen.
+          if (live.st && !live.st.isActive) {
+            if (lit) {
+              lit.style.setProperty('--spot', '0')
+              lit = null
+            }
+            return
+          }
           if (pos.x !== seenX || pos.y !== seenY || live.pos !== seenPos) cool = 5
           else if (cool > 0) cool--
           else return
