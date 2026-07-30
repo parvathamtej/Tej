@@ -393,7 +393,7 @@ export default function Pattern() {
       <div ref={pinRef} className="hidden h-dvh md:block">
         <div
           ref={deskRef}
-          className="grid h-full grid-cols-[38%_1fr] gap-10 px-8 pb-8 pt-24"
+          className="grid h-full grid-cols-[38%_minmax(0,1fr)] gap-10 px-8 pb-8 pt-24"
         >
           {/* Frozen for the entire section */}
           <div className="flex flex-col justify-center">

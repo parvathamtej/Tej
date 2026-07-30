@@ -57,19 +57,38 @@ export default function Work() {
           gsap.to(preview, { clipPath: 'inset(50% 0% 50% 0%)', duration: 0.35, ease: 'power3.in', overwrite: 'auto' })
         }
 
-        const tick = () => {
-          const dx = target.x - pos.x
-          pos.x += dx * 0.12
-          pos.y += (target.y - pos.y) * 0.12
-          vx += (dx * 0.06 - vx) * 0.1
-          gsap.set(preview, {
-            x: pos.x + 28,
-            y: pos.y - 110,
-            rotate: gsap.utils.clamp(-7, 7, vx),
-          })
-          // Stateless presence check, every frame
+        // Stateless presence check, split read-before-write like Cursor: the
+        // hit-test runs first in the frame (prioritised) so layout is clean and
+        // costs nothing, and only when the pointer or the scroll actually moved.
+        // Unconditional per-frame hit-testing after GSAP's writes taxed the
+        // entire page for a preview that only exists over four rows.
+        let seenX = -2
+        let seenY = -2
+        let seenScroll = -2
+        let row = null
+        const read = () => {
+          const scroll = window.__lenis?.scroll ?? window.scrollY
+          if (target.x === seenX && target.y === seenY && scroll === seenScroll) return
+          seenX = target.x
+          seenY = target.y
+          seenScroll = scroll
           const el = target.x >= 0 ? document.elementFromPoint(target.x, target.y) : null
-          const row = el ? el.closest('.work-row') : null
+          row = el ? el.closest('.work-row') : null
+        }
+
+        const write = () => {
+          const dx = target.x - pos.x
+          const dy = target.y - pos.y
+          if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01 || Math.abs(vx) > 0.01) {
+            pos.x += dx * 0.12
+            pos.y += dy * 0.12
+            vx += (dx * 0.06 - vx) * 0.1
+            gsap.set(preview, {
+              x: pos.x + 28,
+              y: pos.y - 110,
+              rotate: gsap.utils.clamp(-7, 7, vx),
+            })
+          }
           if (row !== activeRow) {
             activeRow = row
             if (row) open(work.projects[rows.indexOf(row)])
@@ -78,10 +97,12 @@ export default function Work() {
         }
 
         window.addEventListener('mousemove', onMove, { passive: true })
-        gsap.ticker.add(tick)
+        gsap.ticker.add(read, false, true) // true = run before everything else
+        gsap.ticker.add(write)
         return () => {
           window.removeEventListener('mousemove', onMove)
-          gsap.ticker.remove(tick)
+          gsap.ticker.remove(read)
+          gsap.ticker.remove(write)
         }
       })
 

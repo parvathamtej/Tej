@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { mulberry32 } from '../lib/motion'
 
 /**
@@ -124,6 +125,7 @@ export default function DotField({
       canvas.width = Math.floor(W * dpr)
       canvas.height = Math.floor(H * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      measureScope()
     }
 
     const draw = () => {
@@ -133,7 +135,9 @@ export default function DotField({
 
       const sp = c.spacing
       const z = T * 0.045 * c.drift
-      const scrollZ = (window.scrollY || 0) * 0.00035
+      // Lenis's scroll is a plain number; window.scrollY is a layout read, and
+      // inside a per-frame draw that is another forced reflow.
+      const scrollZ = (window.__lenis?.scroll ?? window.scrollY ?? 0) * 0.00035
 
       if (mx > -9000) {
         if (cx < -9000) { cx = mx; cy = my }
@@ -214,18 +218,35 @@ export default function DotField({
     // (which would restart the noise field every time you scroll back up), the
     // canvas fades on the hero's own geometry and the draw call is skipped
     // entirely once it is invisible, so it costs nothing below the fold.
+    //
+    // The fade must NEVER measure per frame. Calling getBoundingClientRect()
+    // inside the rAF loop forces a synchronous layout every frame, and because
+    // GSAP is writing styles on the same frames it degenerates into layout
+    // thrashing across the WHOLE page — a Chrome trace attributed 664ms of
+    // forced reflow to this one call, which is what made scrolling feel heavy
+    // far below the hero. Geometry is therefore cached in DOCUMENT coordinates
+    // (re-read only on resize and ScrollTrigger refresh) and the fade is pure
+    // arithmetic against Lenis's scroll value, which is a plain number.
     let scopeEl = null
+    let scopeBottomDoc = 0
     let scopeAlpha = 1
+    let lastOpacityWritten = -1
+    const measureScope = () => {
+      const c = cfg.current
+      if (!c.heroOnly) return
+      if (!scopeEl || !scopeEl.isConnected) scopeEl = document.querySelector(c.scopeSelector)
+      if (!scopeEl) return
+      const r = scopeEl.getBoundingClientRect()
+      scopeBottomDoc = r.bottom + (window.__lenis?.scroll ?? window.scrollY)
+    }
     const scopeFade = () => {
       const c = cfg.current
-      if (!c.heroOnly) return 1
-      if (!scopeEl || !scopeEl.isConnected) scopeEl = document.querySelector(c.scopeSelector)
-      if (!scopeEl) return 1
-      const r = scopeEl.getBoundingClientRect()
+      if (!c.heroOnly || !scopeEl) return 1
       const vh = window.innerHeight || 1
+      const scroll = window.__lenis?.scroll ?? window.scrollY
       // 1 while the hero fills the screen, 0 by the time its bottom edge has
       // risen to 45% of the viewport
-      const t = (r.bottom - vh * 0.45) / (vh * 0.55)
+      const t = (scopeBottomDoc - scroll - vh * 0.45) / (vh * 0.55)
       return Math.max(0, Math.min(1, t))
     }
 
@@ -234,14 +255,20 @@ export default function DotField({
       if (hidden) return
       const dt = Math.min((now - last) / 1000, 0.05)
       last = now
-      T += dt
       const target = scopeFade()
       scopeAlpha += (target - scopeAlpha) * 0.12
-      canvas.style.opacity = scopeAlpha.toFixed(3)
+      const o = +scopeAlpha.toFixed(3)
+      if (o !== lastOpacityWritten) {
+        canvas.style.opacity = o
+        lastOpacityWritten = o
+      }
       if (scopeAlpha < 0.012) {
         if (canvas.dataset.cleared !== '1') { ctx.clearRect(0, 0, W, H); canvas.dataset.cleared = '1' }
         return
       }
+      // Time only advances while the field is actually visible, so scrolling
+      // back up resumes the noise where it left off instead of jumping.
+      T += dt
       canvas.dataset.cleared = '0'
       draw()
     }
@@ -267,6 +294,9 @@ export default function DotField({
     window.addEventListener('pointerleave', onLeave)
     window.addEventListener('tej:chapter', onChapter)
     document.addEventListener('visibilitychange', onVis)
+    // The hero's document position moves when fonts swap in or a pin re-measures,
+    // and ScrollTrigger refresh is the one event that reliably marks both.
+    ScrollTrigger.addEventListener('refresh', measureScope)
     raf = requestAnimationFrame(loop)
 
     return () => {
@@ -277,6 +307,7 @@ export default function DotField({
       window.removeEventListener('pointerleave', onLeave)
       window.removeEventListener('tej:chapter', onChapter)
       document.removeEventListener('visibilitychange', onVis)
+      ScrollTrigger.removeEventListener('refresh', measureScope)
     }
   }, [])
 

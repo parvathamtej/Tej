@@ -28,16 +28,43 @@ export default function Cursor() {
       target.y = e.clientY
     }
 
-    const tick = () => {
-      pos.x += (target.x - pos.x) * 0.18
-      pos.y += (target.y - pos.y) * 0.18
-      gsap.set(dot, { x: pos.x, y: pos.y })
-      gsap.set(tag, { x: pos.x + 20, y: pos.y + 20 })
-
+    // elementFromPoint forces a synchronous layout, so this is split in two.
+    //
+    // READ runs FIRST in the frame (prioritised ticker callback), before Lenis
+    // and ScrollTrigger have written anything, so layout is still clean from the
+    // last commit and the hit-test costs nothing. Running it after those writes
+    // — which is what a single combined tick did — forced a fresh layout on
+    // every frame of every scroll, page-wide.
+    //
+    // It must still run without a mouse event (the page scrolls under a still
+    // cursor, so mouseleave never fires: the V4 rule), but only when the answer
+    // could have changed: the pointer moved, or the document scrolled beneath
+    // it. Lenis's scroll is a plain number, so that test is free, and an idle
+    // page does no layout work at all.
+    let seenX = -2
+    let seenY = -2
+    let seenScroll = -2
+    let hit = null
+    const read = () => {
+      const scroll = window.__lenis?.scroll ?? window.scrollY
+      if (target.x === seenX && target.y === seenY && scroll === seenScroll) return
+      seenX = target.x
+      seenY = target.y
+      seenScroll = scroll
       const el = target.x >= 0 ? document.elementFromPoint(target.x, target.y) : null
-      const hit = el ? el.closest('[data-cursor]') : null
-      const label = hit ? hit.getAttribute('data-cursor') || null : null
+      hit = el ? el.closest('[data-cursor]') : null
+    }
 
+    const write = () => {
+      const dx = target.x - pos.x
+      const dy = target.y - pos.y
+      if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+        pos.x += dx * 0.18
+        pos.y += dy * 0.18
+        gsap.set(dot, { x: pos.x, y: pos.y })
+        gsap.set(tag, { x: pos.x + 20, y: pos.y + 20 })
+      }
+      const label = hit ? hit.getAttribute('data-cursor') || null : null
       if (!!hit !== scaled) {
         scaled = !!hit
         gsap.to(dot, { scale: scaled ? 4 : 1, duration: 0.35, ease: 'power4.out', overwrite: 'auto' })
@@ -54,10 +81,12 @@ export default function Cursor() {
     }
 
     window.addEventListener('mousemove', onMove, { passive: true })
-    gsap.ticker.add(tick)
+    gsap.ticker.add(read, false, true) // true = run before everything else
+    gsap.ticker.add(write)
     return () => {
       window.removeEventListener('mousemove', onMove)
-      gsap.ticker.remove(tick)
+      gsap.ticker.remove(read)
+      gsap.ticker.remove(write)
     }
   }, [enabled])
 

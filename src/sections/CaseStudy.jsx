@@ -175,32 +175,76 @@ export default function CaseStudy({ study }) {
           const n = cardEls.length
 
           const GAP = 20
-          const step = () => track.parentElement.clientWidth + GAP
+          // Cached, not read per frame: reading clientWidth inside the tween's
+          // value function forces a layout on every refresh-invalidated frame.
+          let stepPx = track.parentElement.clientWidth + GAP
+          const measureStep = () => {
+            stepPx = track.parentElement.clientWidth + GAP
+          }
           const geo = CARD_GEO[CARD_GEO_MODE] || CARD_GEO.flat
 
           // Cards are transformed directly from scroll progress rather than by
           // tweens on the timeline. A tween per card per transition fought the
           // geometry function for ownership of opacity, and lost on scrub-back.
+          //
+          // These are RAW STYLE WRITES, not gsap.set, and that is deliberate:
+          // gsap.set builds a zero-duration tween per call, and initialising it
+          // re-reads computed style, so painting 4 cards × 9 properties every
+          // frame put 297ms of forced reflow into a Chrome trace (second only to
+          // DotField). Nothing else animates these cards' transform or opacity
+          // (the mobile entrance lives in a mutually exclusive matchMedia
+          // context), so no GSAP cache can go stale here — but the context
+          // cleanup below must clear these inline styles by hand, since GSAP is
+          // no longer the one that set them.
+          const zPrev = new Array(n).fill(null)
+          const pePrev = new Array(n).fill(null)
           const paint = (pos) => {
             live.pos = pos
             for (let i = 0; i < n; i++) {
-              const g = geo(i - pos)
-              gsap.set(cardEls[i], {
-                rotationY: g.rotY,
-                z: g.z,
-                xPercent: g.x,
-                yPercent: g.y,
-                scale: g.scale,
-                opacity: g.opacity,
-                zIndex: 50 - Math.round(Math.abs(i - pos) * 10),
-                pointerEvents: Math.abs(i - pos) < 0.5 ? 'auto' : 'none',
-                transformOrigin: '50% 50%',
-              })
+              const o = i - pos
+              const g = geo(o)
+              const s = cardEls[i].style
+              s.transform = `translate3d(${g.x}%, ${g.y}%, ${g.z}px) rotateY(${g.rotY}deg) scale(${g.scale})`
+              s.opacity = g.opacity
+              // Discrete properties change a handful of times across a whole
+              // scrub; writing them every frame invalidates style for nothing.
+              const a = Math.abs(o)
+              const z = 50 - Math.round(a * 10)
+              if (z !== zPrev[i]) {
+                s.zIndex = z
+                zPrev[i] = z
+              }
+              const pe = a < 0.5 ? 'auto' : 'none'
+              if (pe !== pePrev[i]) {
+                s.pointerEvents = pe
+                pePrev[i] = pe
+              }
             }
           }
           paint(0)
 
+          // ONE CLOCK for the geometry and the track, and it is the track's own
+          // position. Painting from the ScrollTrigger's onUpdate used
+          // self.progress, which is the RAW scroll-derived value: with scrub: 1
+          // the track's translation lags it by up to a second, so on any quick
+          // scroll the cards' rotation and opacity snapped ahead of the slide
+          // they are supposed to belong to. Deriving the position from the
+          // track's actual x makes the two exact by construction, at any scrub
+          // smoothing, and through every ease inside the timeline.
           const tl = gsap.timeline({
+            onUpdate: () => {
+              const pos = -gsap.getProperty(track, 'x') / stepPx
+              paint(pos)
+              // Dots read LIVE at call time (V11 rule): captured nodes go
+              // stale if React ever replaces this subtree.
+              const dotEls = dotsRef.current?.children
+              if (!dotEls) return
+              const active = Math.round(pos)
+              for (let i = 0; i < n && i < dotEls.length; i++) {
+                dotEls[i].textContent = i === active ? '●' : '○'
+                dotEls[i].classList.toggle('text-acid', i === active)
+              }
+            },
             scrollTrigger: {
               // The pinned stage is the trigger: the heading scrolls away first
               trigger: pinRef.current,
@@ -209,23 +253,29 @@ export default function CaseStudy({ study }) {
               scrub: 1,
               pin: pinRef.current,
               invalidateOnRefresh: true,
-              onUpdate: (self) => {
-                const pos = self.progress * (n - 1)
-                paint(pos)
-                // Dots read LIVE at call time (V11 rule): captured nodes go
-                // stale if React ever replaces this subtree.
-                const dotEls = dotsRef.current?.children
-                if (!dotEls) return
-                const active = Math.round(pos)
-                for (let i = 0; i < n && i < dotEls.length; i++) {
-                  dotEls[i].textContent = i === active ? '●' : '○'
-                  dotEls[i].classList.toggle('text-acid', i === active)
-                }
-              },
             },
           })
+          // ease: 'none', NOT the brand ease. In a SCRUBBED timeline the reader's
+          // scroll is the clock, so an ease makes equal wheel movement produce
+          // unequal card movement: each transition shot forward and then stalled
+          // (30px of scroll moved the track 226px), which is precisely what reads
+          // as "not smooth". Scrub: 1 is the only smoothing here. The brand ease
+          // still owns every time-based entrance; Hero, Contact and the progress
+          // bar already followed this rule, and the track was the exception.
           for (let i = 1; i < n; i++) {
-            tl.to(track, { x: () => -(i * step()), duration: 1, ease: EASE }, i - 1)
+            tl.to(track, { x: () => -(i * stepPx), duration: 1, ease: 'none' }, i - 1)
+          }
+          ScrollTrigger.addEventListener('refreshInit', measureStep)
+
+          return () => {
+            ScrollTrigger.removeEventListener('refreshInit', measureStep)
+            // GSAP did not set these, so mm.revert() cannot take them back.
+            cardEls.forEach((el) => {
+              el.style.transform = ''
+              el.style.opacity = ''
+              el.style.zIndex = ''
+              el.style.pointerEvents = ''
+            })
           }
         })
 
@@ -261,7 +311,26 @@ export default function CaseStudy({ study }) {
           pos.y = e.clientY
         }
         let lit = null
+        // A rect read is a forced layout, so it happens only on frames where
+        // something that could change the answer actually moved: the pointer,
+        // or the card under it. A still cursor over a still card costs nothing.
+        //
+        // The cooldown is not an optimisation detail, it is correctness: the
+        // card's rect keeps arriving for a frame or two after the scrubbed
+        // progress stops changing, so a gate that stopped exactly when
+        // live.pos settled would freeze on the last pre-settled rect and leave
+        // a card the cursor is genuinely over unlit (measured, not theorised).
+        let seenX = -2
+        let seenY = -2
+        let seenPos = -2
+        let cool = 0
         const spot = () => {
+          if (pos.x !== seenX || pos.y !== seenY || live.pos !== seenPos) cool = 5
+          else if (cool > 0) cool--
+          else return
+          seenX = pos.x
+          seenY = pos.y
+          seenPos = live.pos
           const target0 = cardEls[Math.round(live.pos)]
           let target = null
           if (target0 && pos.x >= 0) {
@@ -295,14 +364,26 @@ export default function CaseStudy({ study }) {
           the chapter heading: the reader is already looking there, and the HUD
           and chapter rail have already said a new chapter began. A separate
           announcement was the same information a second time, one screen early. */}
+      {/* minmax(0, 1fr), never plain 1fr: a plain fr column keeps an automatic
+          min-content floor, and the stage's non-shrinking flex track pushes that
+          floor past the column's share, so the card overflowed the viewport by
+          164px at 1536 (and 243px at 1440) while a hidden overflow made the page
+          look clean. Vertical padding is viewport-relative because a fixed
+          pt-32/pb-16 pair eats 192px of a 700px-tall laptop viewport, which is
+          what pushed the rail's links under the HUD. */}
       <div
         ref={pinRef}
-        className={`grid grid-cols-1 gap-8 px-5 pb-16 pt-16 md:grid-cols-[32%_1fr] md:gap-12 md:px-8 md:pb-16 md:pt-32 motion-reduce:!h-auto ${
+        className={`grid grid-cols-1 gap-8 px-5 pb-16 pt-16 md:grid-cols-[32%_minmax(0,1fr)] md:gap-12 md:px-8 md:pb-[clamp(3rem,6vh,4rem)] md:pt-[clamp(4.75rem,10vh,8rem)] motion-reduce:!h-auto ${
           single ? 'min-h-[70dvh] content-center' : 'md:h-dvh'
         }`}
       >
-        {/* Left rail: the chapter heading and the persistent reference */}
-        <aside className="cs-rail no-scrollbar flex flex-col gap-4 md:overflow-y-auto md:pr-4">
+        {/* Left rail: the chapter heading and the persistent reference. It scrolls
+            if it must, so data-lenis-prevent is mandatory (Lenis otherwise eats
+            the wheel and the overflow is unreachable). */}
+        <aside
+          data-lenis-prevent
+          className="cs-rail no-scrollbar flex flex-col gap-3 md:gap-4 md:overflow-y-auto md:pr-4"
+        >
           <p className="mono-label text-[var(--accent-ui)]">
             {study.index} / {study.category}
           </p>
