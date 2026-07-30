@@ -31,14 +31,16 @@ const IGNORE_SELECTOR = [
 // control), not an animation that failed to restore. Report it separately as
 // "not rendered" and exclude it: otherwise every `lg:hidden` control is noise.
 const visibility = (el) => {
+  // Walk the WHOLE chain before concluding anything: an early return on low
+  // opacity can fire before a display:none ancestor is discovered, which made
+  // the audit report elements inside the hidden mobile subtree.
   let o = 1
   let e = el
   while (e && e !== document.documentElement) {
     const cs = getComputedStyle(e)
     if (cs.display === 'none') return { skip: true }
-    if (cs.visibility === 'hidden') return { opacity: 0 }
-    o *= parseFloat(cs.opacity)
-    if (o < INVISIBLE_OPACITY) return { opacity: o }
+    if (cs.visibility === 'hidden') o = 0
+    else o *= parseFloat(cs.opacity)
     e = e.parentElement
   }
   return { opacity: o }
@@ -57,9 +59,18 @@ const pendingTargets = () => {
   // a trigger element is a measuring reference, not something that gets
   // restored, and adding it exempts its whole subtree. Since every section is
   // a trigger, doing that blinds the audit to the entire page.
+  //
+  // ONE narrow exception: a PINNED, SCRUBBED trigger with an onUpdate handler
+  // manages its subtree imperatively (the Pattern frame and the dossier stages
+  // paint their states from progress). Those hidden states are restored by the
+  // handler, not by registered tweens, so the pin element counts as a restorer.
   ScrollTrigger.getAll().forEach((st) => {
     if (st.progress >= 1 && !st.vars.scrub) return
     if (st.animation) walk(st.animation)
+    if (st.vars.pin && st.vars.scrub && st.vars.onUpdate) {
+      const pinEl = st.vars.pin === true ? st.trigger : st.vars.pin
+      if (pinEl?.nodeType) set.add(pinEl)
+    }
   })
   // ...and anything any live tween will still touch, ScrollTrigger or not.
   // Without this, a plain timeline mid-flight (the preloader) reads as a bug.

@@ -5,6 +5,56 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Stamp from '../components/Stamp'
 import { DUR_S, EASE, MM, STAGGER, reduced } from '../lib/motion'
 
+// Shipped stage treatment, chosen in the effect lab and then inlined: the lab
+// and its store were tuning scaffolding and are deleted (they also added a
+// subscription re-render to this component, which is the exact class of churn
+// that caused the frozen-dots bug). The other geometries and skins remain
+// defined below and in global.css as documented one-word swaps.
+const CARD_GEO_MODE = 'coverflow'
+const CARD_SKIN = 'rounded'
+
+// ─── Stage card geometry ─────────────────────────────────────────────────────
+// Every mode is a pure function of a card's signed offset from the active
+// index. The track still translates by a whole card width per step, so the
+// layout box and the pin arithmetic never change; these transforms ride on top
+// of that. `flat` reproduces the original behaviour exactly.
+const CARD_GEO = {
+  flat: (o) => ({ rotY: 0, z: 0, x: 0, y: 0, scale: 1, opacity: Math.abs(o) < 0.5 ? 1 : 0.2 }),
+  coverflow: (o) => {
+    const a = Math.min(Math.abs(o), 2)
+    return {
+      rotY: -o * 34,
+      z: -a * 190,
+      x: o * 3,
+      y: 0,
+      scale: 1 - a * 0.05,
+      opacity: Math.max(0.12, 1 - a * 0.5),
+    }
+  },
+  arc: (o) => {
+    const a = Math.min(Math.abs(o), 2)
+    return {
+      rotY: -o * 14,
+      z: -a * 120,
+      x: 0,
+      y: a * 5.5,
+      scale: 1 - a * 0.06,
+      opacity: Math.max(0.12, 1 - a * 0.48),
+    }
+  },
+  deck: (o) => {
+    const a = Math.min(Math.abs(o), 2)
+    return {
+      rotY: 0,
+      z: o < 0 ? 180 * -o : -a * 150,
+      x: o < 0 ? o * 2.5 : 0,
+      y: o < 0 ? o * 3 : a * 3,
+      scale: o < 0 ? 1 + -o * 0.04 : 1 - a * 0.05,
+      opacity: o < 0 ? Math.max(0, 1 + o * 1.2) : Math.max(0.12, 1 - a * 0.42),
+    }
+  },
+}
+
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 // Preview = the first paragraph, or the first two when the opener is a single
@@ -114,12 +164,33 @@ export default function CaseStudy({ study }) {
           const track = trackRef.current
           if (!track || !dotsRef.current) return
           const cardEls = q('.cs-card')
-          const dots = dotsRef.current.children
           const n = cardEls.length
-          gsap.set(cardEls, { opacity: (i) => (i === 0 ? 1 : 0.2) })
 
           const GAP = 20
           const step = () => track.parentElement.clientWidth + GAP
+          const geo = CARD_GEO[CARD_GEO_MODE] || CARD_GEO.flat
+
+          // Cards are transformed directly from scroll progress rather than by
+          // tweens on the timeline. A tween per card per transition fought the
+          // geometry function for ownership of opacity, and lost on scrub-back.
+          const paint = (pos) => {
+            for (let i = 0; i < n; i++) {
+              const g = geo(i - pos)
+              gsap.set(cardEls[i], {
+                rotationY: g.rotY,
+                z: g.z,
+                xPercent: g.x,
+                yPercent: g.y,
+                scale: g.scale,
+                opacity: g.opacity,
+                zIndex: 50 - Math.round(Math.abs(i - pos) * 10),
+                pointerEvents: Math.abs(i - pos) < 0.5 ? 'auto' : 'none',
+                transformOrigin: '50% 50%',
+              })
+            }
+          }
+          paint(0)
+
           const tl = gsap.timeline({
             scrollTrigger: {
               // The pinned stage is the trigger: the heading scrolls away first
@@ -130,19 +201,22 @@ export default function CaseStudy({ study }) {
               pin: pinRef.current,
               invalidateOnRefresh: true,
               onUpdate: (self) => {
-                const active = Math.round(self.progress * (n - 1))
-                for (let i = 0; i < n; i++) {
-                  dots[i].textContent = i === active ? '●' : '○'
-                  dots[i].classList.toggle('text-acid', i === active)
+                const pos = self.progress * (n - 1)
+                paint(pos)
+                // Dots read LIVE at call time (V11 rule): captured nodes go
+                // stale if React ever replaces this subtree.
+                const dotEls = dotsRef.current?.children
+                if (!dotEls) return
+                const active = Math.round(pos)
+                for (let i = 0; i < n && i < dotEls.length; i++) {
+                  dotEls[i].textContent = i === active ? '●' : '○'
+                  dotEls[i].classList.toggle('text-acid', i === active)
                 }
               },
             },
           })
           for (let i = 1; i < n; i++) {
-            const at = i - 1
-            tl.to(track, { x: () => -(i * step()), duration: 1, ease: EASE }, at)
-            tl.to(cardEls[i - 1], { opacity: 0.2, duration: 0.5, ease: EASE }, at + 0.1)
-            tl.to(cardEls[i], { opacity: 1, duration: 0.5, ease: EASE }, at + 0.3)
+            tl.to(track, { x: () => -(i * step()), duration: 1, ease: EASE }, i - 1)
           }
         })
 
@@ -165,7 +239,7 @@ export default function CaseStudy({ study }) {
   )
 
   return (
-    <section id={study.id} ref={rootRef} className="relative">
+    <section id={study.id} ref={rootRef} className={`relative skin-${CARD_SKIN}`}>
       {/* No standalone company heading and no divider screen. The rail below IS
           the chapter heading: the reader is already looking there, and the HUD
           and chapter rail have already said a new chapter began. A separate

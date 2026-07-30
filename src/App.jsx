@@ -4,6 +4,7 @@ import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import SmoothScroll from './components/SmoothScroll'
 import Preloader from './components/Preloader'
+import DotField from './components/DotField'
 import Grain from './components/Grain'
 import Cursor from './components/Cursor'
 import Progress from './components/Progress'
@@ -105,6 +106,11 @@ export default function App() {
         className="site-main relative z-10 mb-[100dvh]"
         style={{ background: 'var(--bg-page)' }}
       >
+        {/* Hero-scoped atmosphere. A negative-z child of .site-main so it
+            paints above main's opaque background (the curtain hiding the fixed
+            footer) but below all content. It fades on the hero's geometry
+            rather than unmounting, so the field never restarts on scroll-back. */}
+        <DotField />
         <Hero started={started} />
         <Pattern />
         {caseStudies.map((study) => (
