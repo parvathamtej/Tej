@@ -119,10 +119,11 @@ export const pattern = {
 // schematic or generated: no real tools, no real data, no NDA exposure.
 export const patternVisuals = {
   hansi: {
-    // Real photography pending image rights. null → crafted placeholder panels.
-    // To swap: set these to '/hansi-before.jpg' and '/hansi-after.jpg'.
-    beforeSrc: null,
-    afterSrc: null,
+    // The actual before/after from the Hansi site, cropped to this frame's
+    // ratio and served as WebP (1.6MB of square JPEG became 78kB). Set either to
+    // null to fall back to the crafted placeholder panels.
+    beforeSrc: '/hansi-before.webp',
+    afterSrc: '/hansi-after.webp',
     beforeLabel: 'BEFORE STATE',
     afterLabel: 'AFTER DESIGN',
     hint: 'MOVE THE CURSOR TO REVEAL',
@@ -309,6 +310,11 @@ export const stack = {
 
 // ── 06 / SELECTED WORK ───────────────────────────────────────────────────────
 // Honest labels. Inflated ones next to the Arrivio chapter would poison it.
+// previewSrc drives the hover preview: a real screenshot of the thing running
+// when there is one, the generated art when there is not. Drop a file at the
+// path and it appears; no other change needed. Deliberately NOT filled with
+// invented UI: a fabricated screenshot of software that does not look like that
+// is a claim about the work, not a decoration.
 export const work = {
   index: '06',
   category: 'PROJECTS',
@@ -323,6 +329,7 @@ export const work = {
       href: 'https://github.com/parvathamtej/Rag-Chat-App',
       hrefLabel: 'github.com/parvathamtej/Rag-Chat-App',
       art: 'rag',
+      previewSrc: null, // drop /work-rag.webp into public/ for a real shot
     },
     {
       index: '02',
@@ -331,6 +338,7 @@ export const work = {
       year: '2024',
       status: 'TEAM · INFOSYS',
       art: 'speech',
+      previewSrc: null, // drop /work-speech.webp into public/ for a real shot
     },
     {
       index: '03',
@@ -339,6 +347,7 @@ export const work = {
       year: '2023',
       status: 'SMART INDIA HACKATHON',
       art: 'kiosk',
+      previewSrc: null, // drop /work-kiosk.webp into public/ for a real shot
     },
     {
       index: '04',
@@ -347,6 +356,7 @@ export const work = {
       year: '2024',
       status: 'PROTOTYPE',
       art: 'advisor',
+      previewSrc: null, // drop /work-advisor.webp into public/ (the Tenali render)
     },
   ],
 }

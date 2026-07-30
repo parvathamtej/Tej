@@ -403,6 +403,18 @@ body {
   color: var(--accent-ui);
   font-size: 0.5rem !important;
 }
+/* Once a real photograph sits under them, these labels are over concrete, glass
+   and daylight rather than flat ink, and mono at 60% opacity disappears. Chips
+   are how the reference handles it, and how any map or viewer does. */
+.pv-chip {
+  background: color-mix(in srgb, var(--bg-page) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg-page) 12%, transparent);
+  padding: 5px 9px;
+}
+.pv-lens-tag.pv-chip {
+  padding: 3px 6px;
+  border-color: color-mix(in srgb, var(--accent-ui) 40%, transparent);
+}
 .pv-hint {
   display: none;
   transition: opacity 0.3s ease;

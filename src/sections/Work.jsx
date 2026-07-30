@@ -18,6 +18,7 @@ export default function Work() {
   const sectionRef = useRef(null)
   const previewRef = useRef(null)
   const artRef = useRef(null)
+  const shotRef = useRef(null)
   const nameRef = useRef(null)
 
   useGSAP(
@@ -49,7 +50,15 @@ export default function Work() {
         }
 
         const open = (project) => {
-          artRef.current.className = `art-${project.art} absolute inset-0`
+          const shot = shotRef.current
+          if (project.previewSrc) {
+            if (shot.getAttribute('src') !== project.previewSrc) shot.setAttribute('src', project.previewSrc)
+            shot.style.opacity = '1'
+            artRef.current.className = 'absolute inset-0 bg-ink'
+          } else {
+            shot.style.opacity = '0'
+            artRef.current.className = `art-${project.art} absolute inset-0`
+          }
           nameRef.current.textContent = project.name
           gsap.to(preview, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.45, ease: EASE, overwrite: 'auto' })
         }
@@ -164,6 +173,16 @@ export default function Work() {
         style={{ clipPath: 'inset(50% 0% 50% 0%)' }}
       >
         <div ref={artRef} className="art-kiosk absolute inset-0" />
+        {/* A real screenshot when the project has one, the generated art when it
+            does not. Kept as two layers rather than swapping one, so an image
+            that is still decoding never shows an empty rectangle. */}
+        <img
+          ref={shotRef}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ opacity: 0 }}
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
         <p ref={nameRef} className="mono-label absolute bottom-3 left-3 text-bone" />
         <span className="mono-label absolute right-3 top-3 text-acid">✦</span>
       </div>

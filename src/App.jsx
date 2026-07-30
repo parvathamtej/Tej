@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -37,6 +37,16 @@ const TEXTURE_OFF = 0
 
 export default function App() {
   const [started, setStarted] = useState(false)
+
+  // Failsafe. The hero hides itself and waits for this flag, so if the
+  // preloader's timeline ever fails to complete (a tab backgrounded during
+  // load pauses rAF, which pauses the timeline) the page would sit blank
+  // indefinitely. Nothing on this site is allowed to depend on an animation
+  // finishing in order to be readable. Setting it twice is a no-op in React.
+  useEffect(() => {
+    const id = setTimeout(() => setStarted(true), 6000)
+    return () => clearTimeout(id)
+  }, [])
 
   useGSAP(() => {
     // Chapter detection for the HUD readout — App's effect runs after every

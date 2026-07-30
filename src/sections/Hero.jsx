@@ -32,6 +32,13 @@ export default function Hero({ started }) {
       if (reduced()) return
       gsap.set('.hero-char', { yPercent: 112 })
       gsap.set('.hero-soft', { opacity: 0, y: 18 })
+      // The star is hidden by its OWN properties, never by the letter mask.
+      // yPercent is relative to an element's own height, and at 0.42em the star
+      // is a third the height of the capitals, so yPercent: 112 moved it far too
+      // little to clear a mask cut for full-height letters. It stayed on screen
+      // through the entire hidden beat, which is why a freshly loaded page
+      // showed an empty hero with one floating star.
+      gsap.set('.hero-star', { opacity: 0, y: -34, scale: 0.6 })
     },
     { scope: sectionRef },
   )
@@ -42,7 +49,19 @@ export default function Hero({ started }) {
       gsap
         .timeline()
         .to('.hero-char', { yPercent: 0, duration: DUR, ease: EASE, stagger: STAGGER / 1.5 }, 0)
+        // The star falls in after the name has landed and takes its place at the
+        // end of it. No overshoot on the landing (house rule); the character
+        // comes from the drop itself.
+        .to('.hero-star', { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: EASE }, 0.5)
         .to('.hero-soft', { opacity: 1, y: 0, duration: 0.8, ease: EASE, stagger: 0.12 }, 0.45)
+        // Then it breathes, quietly and forever, because it is the only thing on
+        // the page you can click without being told to. This is an idle loop and
+        // not an entrance, which is why it is the one place a sine ease is right.
+        .to(
+          '.hero-star',
+          { opacity: 0.55, duration: 1.7, ease: 'sine.inOut', repeat: -1, yoyo: true },
+          '>',
+        )
     },
     { scope: sectionRef, dependencies: [started] },
   )
@@ -89,7 +108,7 @@ export default function Hero({ started }) {
               onClick={toggleTurbo}
               aria-label="Toggle turbo scroll mode"
               data-cursor="TURBO?"
-              className="hero-spin hero-char ml-[0.12em] inline-block cursor-pointer border-0 bg-transparent align-baseline text-[0.42em] text-acid"
+              className="hero-spin hero-star ml-[0.12em] inline-block cursor-pointer border-0 bg-transparent align-baseline text-[0.42em] text-acid"
             >
               ✦
             </button>

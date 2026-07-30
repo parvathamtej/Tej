@@ -18,13 +18,19 @@ export default function Preloader({ onDone }) {
       // Lock scroll for the duration (rAF so SmoothScroll's effect has run)
       requestAnimationFrame(() => window.__lenis?.stop())
 
+      // Two moments, not one. The hero must START revealing as the curtain
+      // begins to lift, otherwise the curtain clears a hero that is still in its
+      // hidden state and the page shows ~half a second of empty screen (measured
+      // at 474ms). Scroll is released and the curtain leaves the DOM only once
+      // the wipe has finished.
+      const reveal = () => onDone()
       const finish = () => {
         window.__lenis?.start()
-        onDone()
         setGone(true)
       }
 
       if (reduced()) {
+        reveal()
         gsap.to(rootRef.current, { opacity: 0, duration: 0.4, delay: 0.3, onComplete: finish })
         return
       }
@@ -46,10 +52,11 @@ export default function Preloader({ onDone }) {
           0.1,
         )
         .from('.pre-meta', { opacity: 0, y: 12, duration: 0.6, ease: EASE }, 0.5)
+        .add(reveal, '+=0.15')
         .to(
           rootRef.current,
           { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.9, ease: EASE_INOUT },
-          '+=0.15',
+          '<',
         )
     },
     { scope: rootRef },

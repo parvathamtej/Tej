@@ -137,14 +137,17 @@ function VisualHansi() {
         <span className="pv-lens-dot" style={{ top: -3, right: -3 }} />
         <span className="pv-lens-dot" style={{ bottom: -3, left: -3 }} />
         <span className="pv-lens-dot" style={{ bottom: -3, right: -3 }} />
-        <span className="pv-lens-tag mono-label">{v.afterLabel}</span>
+        <span className="pv-lens-tag pv-chip mono-label">{v.afterLabel}</span>
       </div>
 
-      <p className="mono-label absolute bottom-4 left-4 opacity-70">{v.beforeLabel}</p>
-      <p ref={hintRef} className="pv-hint mono-label absolute left-1/2 top-4 -translate-x-1/2 text-acid">
+      <p className="pv-chip mono-label absolute bottom-4 left-4">{v.beforeLabel}</p>
+      <p
+        ref={hintRef}
+        className="pv-hint pv-chip mono-label absolute left-1/2 top-4 -translate-x-1/2 text-acid"
+      >
         {v.hint}
       </p>
-      <p ref={readoutRef} className="mono-label absolute bottom-4 right-4 opacity-60">
+      <p ref={readoutRef} className="pv-chip mono-label absolute bottom-4 right-4 opacity-80">
         X: 0PX · Y: 0PX
       </p>
     </div>
@@ -165,7 +168,7 @@ function VisualGlobalLogic() {
       <div className="grid grid-cols-5 gap-x-4 gap-y-0">
         {v.screens.map((screen, s) => (
           <div key={screen.name} className="flex flex-col gap-2">
-            <p className="mono-label mb-1 opacity-70">
+            <p className="pv-screen-label mono-label mb-1 opacity-70">
               0{s + 1} <span className="opacity-60">{screen.name}</span>
             </p>
             {screen.fields.map((label) => {
@@ -179,16 +182,26 @@ function VisualGlobalLogic() {
           </div>
         ))}
       </div>
-      <div className="pv-input hairline-t relative pt-4" style={{ opacity: 0 }}>
-        <p className="mono-label !normal-case flex items-baseline !text-[0.8rem]">
-          <span className="mr-2 text-acid">&gt;</span>
+      {/* ONE field, centred where the forty were. Left in normal flow below the
+          grid it sat at the bottom of the frame while the vacated grid area
+          stayed empty, so the moment the beat exists to make (forty inputs
+          collapse into one sentence) read as a blank screen with a caption
+          under it. Absolutely centred, the sentence arrives exactly where the
+          fields just left, and the single bordered box makes the argument
+          literal rather than described. */}
+      <div
+        className="pv-input absolute inset-x-6 top-1/2 -translate-y-1/2 md:inset-x-8"
+        style={{ opacity: 0 }}
+      >
+        <p className="mono-label !normal-case flex items-baseline gap-2 overflow-hidden border border-[var(--hair)] bg-[rgba(237,234,227,0.04)] px-3 py-3 !text-[0.8rem] md:!text-[0.95rem]">
+          <span className="text-acid">&gt;</span>
           <span
             className="pv-sentence inline-block whitespace-nowrap"
             style={{ clipPath: 'inset(0 100% 0 0)' }}
           >
             {v.sentence}
           </span>
-          <span className="caret ml-0.5 text-acid">▌</span>
+          <span className="caret text-acid">▌</span>
         </p>
       </div>
     </div>
@@ -364,6 +377,14 @@ function addBeatVisual(tl, root, beat, at, len, lens = false) {
         stagger: { each: (len * 0.4) / 40, from: 'random' },
       },
       at,
+    )
+    // The screen names leave with their fields. Left behind they read as five
+    // orphaned headings over one sentence, when the point is that the whole
+    // five-screen form is what the sentence replaces.
+    tl.to(
+      q('.pv-screen-label'),
+      { opacity: 0, y: 40, duration: len * 0.3, ease: EASE, stagger: len * 0.03 },
+      at + len * 0.1,
     )
     tl.to(q('.pv-input'), { opacity: 1, duration: len * 0.1 }, at + len * 0.45)
     tl.to(
@@ -568,7 +589,10 @@ export default function Pattern() {
       mm.add(MM.reduce, () => {
         if (!rootRef.current) return
         const q = gsap.utils.selector(rootRef.current)
-        gsap.set(q('.pt-panel, .pt-visual, .pv-input, .pv-tag, .pv-legend'), { autoAlpha: 1, y: 0 })
+        gsap.set(q('.pt-panel, .pt-visual, .pv-input, .pv-tag, .pv-legend, .pv-screen-label'), {
+          autoAlpha: 1,
+          y: 0,
+        })
         gsap.set(q('.pv-wipe, .pv-sentence'), { clipPath: 'inset(0% 0% 0% 0%)' })
         gsap.set(q('.pv-divider'), { left: '50%' })
         q('.pv-hex').forEach((h) => gsap.set(h, { opacity: Number(h.dataset.weight) }))
