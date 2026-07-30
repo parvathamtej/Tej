@@ -25,3 +25,33 @@ export const MEASURE = {
   'display-m': 'max-w-[22ch]',
   'display-s': 'max-w-[30ch]',
 }
+
+// ─── LEVEL, THE RULE LENGTH ALONE COULD NOT EXPRESS ──────────────────────────
+//
+// Sizing by length is right within a level and wrong across levels. A section
+// heading of 29 characters and an item heading of 36 both resolved to
+// display-m, so "Education and certifications." and "B.Tech, Computer Science
+// Engineering" rendered at exactly the same 44px: a measured ratio of 1.00,
+// which tells the reader nothing about where to start.
+//
+// Two adjacent levels must differ enough to be read as different. Below about
+// 1.2x the eye treats them as the same rank and the page loses its entry
+// point, so every level here is at least ~1.4x the one under it:
+//
+//   SECTION heading   display-l 64px  (display-m 44px only when long)
+//   ITEM heading      display-s 31px
+//   BODY / deck       18-20px
+//   META (mono)       12-14px
+//
+// Length still chooses WITHIN a level. It may never promote an item above a
+// section, which is what the caps below enforce.
+export function sectionStep(text) {
+  const step = stepForLength(text)
+  // Never smaller than display-m: a section heading is short by construction,
+  // and anything below this stops reading as the top of a section.
+  return step === 'display-s' ? 'display-m' : step
+}
+
+// Items are capped one full level below the smallest section heading.
+export const ITEM_STEP = 'display-s'
+export const ITEM_MEASURE = MEASURE[ITEM_STEP]

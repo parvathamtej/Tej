@@ -104,7 +104,7 @@ function Card({ card, n }) {
         0{n}
       </span>
       {card.heading ? (
-        <h3 className="display-m max-w-[33ch] text-[var(--accent-ui)]">
+        <h3 className="display-s max-w-[33ch] text-[var(--accent-ui)]">
           {card.heading}
         </h3>
       ) : null}
@@ -137,11 +137,18 @@ function Card({ card, n }) {
         </>
       ) : null}
       {/* The card's conclusion. Stays visible whether the card is open or not:
-          it is the argument, and it should never sit behind an interaction. */}
+          it is the argument, and it should never sit behind an interaction.
+          It is NOT a second headline: at display-s in acid it matched the card
+          heading exactly, so each card opened with two competing shouts and no
+          reading order. A rule and a label make it read as the conclusion it
+          is, and leave the heading as the card's single entry point. */}
       {card.closer ? (
-        <p className="display-s mt-8 max-w-[30ch] text-acid">
-          {card.closer}
-        </p>
+        <div className="mt-10">
+          <p className="mono-label text-[var(--accent-ui)] opacity-70">RESULT</p>
+          <p className="deck mt-3 max-w-[34ch] border-l-2 border-[var(--accent-ui)] pl-4 text-acid">
+            {card.closer}
+          </p>
+        </div>
       ) : null}
     </article>
   )
@@ -436,7 +443,7 @@ export default function CaseStudy({ study }) {
       <div
         ref={pinRef}
         className={`grid grid-cols-1 gap-8 px-5 pb-16 pt-16 md:grid-cols-[32%_minmax(0,1fr)] md:gap-12 md:px-8 md:pb-[clamp(3rem,6vh,4rem)] md:pt-[clamp(4.75rem,10vh,8rem)] motion-reduce:!h-auto ${
-          single ? 'min-h-[70dvh] content-center' : 'md:h-dvh'
+          single ? 'md:h-[82dvh]' : 'md:h-dvh'
         }`}
       >
         {/* Left rail: the chapter heading and the persistent reference. It can
@@ -461,7 +468,7 @@ export default function CaseStudy({ study }) {
             <ul className="mt-2 flex flex-wrap gap-2">
               {study.stats.map((s) => (
                 <li key={s}>
-                  <Stamp text={s} />
+                  <Stamp text={s} variant="quiet" />
                 </li>
               ))}
             </ul>
@@ -490,25 +497,24 @@ export default function CaseStudy({ study }) {
           ) : null}
         </aside>
 
-        {/* Stage */}
-        {single ? (
-          <div className="body-copy flex flex-col justify-center gap-5">
-            {study.intro.map((p) => (
-              <p key={p.slice(0, 24)}>{p}</p>
-            ))}
-          </div>
-        ) : (
-          <div className="flex min-h-0 flex-col gap-4">
-            <div className="cs-stage min-h-0 flex-1 md:overflow-hidden">
-              <div
-                ref={trackRef}
-                className="flex flex-col gap-5 md:h-full md:flex-row motion-reduce:!flex-col"
-              >
-                {cards.map((card) => (
-                  <Card key={card.key} card={card} n={cards.indexOf(card) + 1} />
-                ))}
-              </div>
+        {/* Stage. EVERY dossier gets a card, including the one with a single
+            block: rendering Hansi's prose bare against the rail made the last
+            chapter of a three chapter run look like a different template, as
+            though the page had run out of design. A one card dossier simply
+            skips the pin and the dots, because there is nothing to advance
+            through, but the surface it presents is the same. */}
+        <div className="flex min-h-0 flex-col gap-4">
+          <div className="cs-stage min-h-0 flex-1 md:overflow-hidden">
+            <div
+              ref={trackRef}
+              className="flex flex-col gap-5 md:h-full md:flex-row motion-reduce:!flex-col"
+            >
+              {cards.map((card) => (
+                <Card key={card.key} card={card} n={cards.indexOf(card) + 1} />
+              ))}
             </div>
+          </div>
+          {cards.length > 1 ? (
             <p
               ref={dotsRef}
               aria-hidden="true"
@@ -520,8 +526,8 @@ export default function CaseStudy({ study }) {
                 </span>
               ))}
             </p>
-          </div>
-        )}
+          ) : null}
+        </div>
       </div>
 
       {/* Seam: a released pin and the next arriving chapter must not share the

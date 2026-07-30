@@ -3,9 +3,14 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import MagneticButton from '../components/MagneticButton'
-import { contact, identity } from '../data/content'
+import { availability, contact, identity } from '../data/content'
 import { DUR, EASE, STAGGER } from '../lib/motion'
 import { useIST } from '../lib/useIST'
+
+// Same column header treatment as the credentials section, deliberately: a
+// reader who has already scrolled past three labelled columns recognises this
+// one instantly.
+const COL_LABEL = 'mono-label !text-[0.875rem] text-[var(--accent-ui)]'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
@@ -90,42 +95,84 @@ export default function Contact() {
           <Line text={contact.lineB} className="text-acid md:pl-[14vw]" />
         </h2>
 
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-8 pb-8">
-          <MagneticButton data-cursor="SAY HI">
-            <a
-              href={`mailto:${identity.email}`}
-              className="mono-label inline-block border border-[rgba(237,234,227,0.3)] px-7 py-4 transition-colors duration-200 hover:bg-acid hover:text-ink"
-            >
-              {identity.email}
-            </a>
-          </MagneticButton>
-          <nav className="ct-soft flex gap-7" aria-label="Social links">
-            {contact.links.map((l) => {
-              // A download link (the résumé slot) stays same-tab and gets ↓
-              const arrow = l.download ? '↓' : '↗'
-              const extra = l.download
-                ? { download: '' }
-                : { target: '_blank', rel: 'noreferrer' }
-              return (
-                <a key={l.label} href={l.href} data-cursor="" className="roll mono-label" {...extra}>
-                  <span>
-                    {l.label} {arrow}
-                  </span>
-                  <span aria-hidden="true" className="text-acid">
-                    {l.label} {arrow}
-                  </span>
+        {/* Three labelled columns, not four things pinned to four corners. The
+            old row spread the email hard left and the links hard right with a
+            void between them, so the eye had to hunt for the thing the whole
+            screen exists to offer. This is the same column pattern the
+            credentials section already uses, which means the reader has met it
+            before: label, rule, content, read left to right.
+            AVAILABILITY lives here now. It used to sit in the bottom bar, and
+            deleting that bar would otherwise have deleted the one line on the
+            site that says he is actually looking. */}
+        <div className="ct-soft mt-12 grid grid-cols-1 gap-8 pb-8 md:grid-cols-3 md:gap-10">
+          <div>
+            <p className={COL_LABEL}>EMAIL</p>
+            <div className="mt-4 border-t border-[var(--hair)] pt-5">
+              <MagneticButton data-cursor="SAY HI">
+                <a
+                  href={`mailto:${identity.email}`}
+                  className="mono-label inline-block border border-[rgba(237,234,227,0.3)] px-6 py-3.5 transition-colors duration-200 hover:bg-acid hover:text-ink"
+                >
+                  {identity.email}
                 </a>
-              )
-            })}
-          </nav>
+              </MagneticButton>
+            </div>
+          </div>
+
+          <div>
+            <p className={COL_LABEL}>ELSEWHERE</p>
+            <nav
+              className="mt-4 flex flex-col gap-2.5 border-t border-[var(--hair)] pt-5"
+              aria-label="Social links"
+            >
+              {contact.links.map((l) => {
+                // A download link (the résumé slot) stays same-tab and gets ↓
+                const arrow = l.download ? '↓' : '↗'
+                const extra = l.download
+                  ? { download: '' }
+                  : { target: '_blank', rel: 'noreferrer' }
+                return (
+                  <a
+                    key={l.label}
+                    href={l.href}
+                    data-cursor=""
+                    className="roll mono-label self-start"
+                    {...extra}
+                  >
+                    <span>
+                      {l.label} {arrow}
+                    </span>
+                    <span aria-hidden="true" className="text-acid">
+                      {l.label} {arrow}
+                    </span>
+                  </a>
+                )
+              })}
+            </nav>
+          </div>
+
+          <div>
+            <p className={COL_LABEL}>AVAILABILITY</p>
+            <div className="mt-4 border-t border-[var(--hair)] pt-5">
+              <p className="mono-label flex items-center gap-2.5 text-[var(--accent-ui)]">
+                <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-acid" />
+                {availability}
+              </p>
+              <p className="mono-label !normal-case mt-2.5 opacity-60">
+                {identity.location} {time} IST
+              </p>
+            </div>
+          </div>
         </div>
 
+        {/* Two groups, not four evenly spaced items. Location and time moved up
+            into AVAILABILITY where they mean something; what is left is the
+            colophon on one side and the way back on the other. */}
         <div className="ct-soft hairline-t flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4">
           <p className="mono-label opacity-60">
-            {identity.locationShort} · {time} IST
+            © 2026 TEJ PRAKASH
+            <span className="ml-3 hidden lg:inline">· {contact.credit}</span>
           </p>
-          <p className="mono-label opacity-60">© 2026 TEJ PRAKASH</p>
-          <p className="mono-label hidden opacity-60 lg:block">{contact.credit}</p>
           <a href="#top" onClick={backToTop} data-cursor="" className="roll mono-label">
             <span>BACK TO TOP ↑</span>
             <span aria-hidden="true" className="text-acid">

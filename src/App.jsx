@@ -9,7 +9,6 @@ import Grain from './components/Grain'
 import Cursor from './components/Cursor'
 import Progress from './components/Progress'
 import Navbar from './components/Navbar'
-import Hud from './components/Hud'
 import Hero from './sections/Hero'
 import Pattern from './sections/Pattern'
 import CaseStudy from './sections/CaseStudy'
@@ -49,7 +48,10 @@ export default function App() {
   }, [])
 
   useGSAP(() => {
-    // Chapter detection for the HUD readout — App's effect runs after every
+    // Chapter detection. The bottom HUD that used to read these is deleted (it
+    // competed with the page for attention), but the events still drive the
+    // dot field's token re-read, and the progress ticks still navigate by
+    // chapter, so the triggers stay. App's effect runs after every
     // section has mounted AND after pins wrapped their sections, so the query
     // is ordering-safe. Pinned sections use their pin-spacer as the trigger so
     // the chapter stays active for the whole pinned stretch.
@@ -111,7 +113,6 @@ export default function App() {
       <Cursor />
       <Progress />
       <Navbar />
-      <Hud />
       <main
         className="site-main relative z-10 mb-[100dvh]"
         style={{ background: 'var(--bg-page)' }}

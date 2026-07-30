@@ -48,7 +48,14 @@ export default function Stamp({ text, className = '', variant = 'chip' }) {
   const chip =
     variant === 'bare'
       ? 'text-[var(--accent-ui)] group-hover:text-[var(--bg-page)]'
-      : 'border border-[var(--accent-ui)] px-2.5 py-1.5 text-[var(--accent-ui)] group-hover:border-[var(--bg-page)] group-hover:text-[var(--bg-page)]'
+      : variant === 'quiet'
+        ? // Facts, stated, without shouting. Five accent-bordered chips in a rail
+          // read as five buttons competing with the card beside them; in hairline
+          // and bone they stay legible and stop pulling the eye off the heading,
+          // which leaves the one true accent chip (the status) as the rail's
+          // single highlight.
+          'border border-[var(--hair)] px-2.5 py-1.5 text-[var(--fg-page)] opacity-70 group-hover:border-[var(--bg-page)] group-hover:text-[var(--bg-page)]'
+        : 'border border-[var(--accent-ui)] px-2.5 py-1.5 text-[var(--accent-ui)] group-hover:border-[var(--bg-page)] group-hover:text-[var(--bg-page)]'
 
   return (
     <span

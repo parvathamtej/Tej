@@ -3,7 +3,7 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DUR, EASE, STAGGER } from '../lib/motion'
-import { MEASURE, stepForLength } from '../lib/type'
+import { MEASURE, sectionStep } from '../lib/type'
 
 gsap.registerPlugin(useGSAP, ScrollTrigger)
 
@@ -19,7 +19,7 @@ gsap.registerPlugin(useGSAP, ScrollTrigger)
 export default function SectionHeading({ index, category, heading, deck, className = '' }) {
   const rootRef = useRef(null)
   const lines = Array.isArray(heading) ? heading : [heading]
-  const step = stepForLength(lines)
+  const step = sectionStep(lines)
 
   useGSAP(
     () => {

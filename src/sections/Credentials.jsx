@@ -53,7 +53,7 @@ export default function Credentials() {
         <div className="cr-col">
           <p className={COL_LABEL}>DEGREE</p>
           <div className="mt-6 border-t border-[var(--hair)] pt-6">
-            <p className="display-m max-w-[22ch]">{education.degree}</p>
+            <p className="display-s max-w-[30ch]">{education.degree}</p>
             <p className="body-copy mt-3 text-bone-dim">{education.focus}</p>
             <p className="mono-label !text-[0.875rem] !normal-case mt-4 opacity-70">
               {education.school}
