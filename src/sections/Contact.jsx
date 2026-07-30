@@ -78,17 +78,17 @@ export default function Contact() {
 
   return (
     <footer ref={rootRef} className="fixed inset-x-0 bottom-0 z-[1] flex h-dvh flex-col bg-ink text-bone">
-      <div ref={innerRef} className="flex flex-1 flex-col px-5 pt-24 md:px-8">
-        <div className="ct-soft flex items-baseline justify-between">
-          <p className="mono-label">
-            <span className="text-acid">[{contact.index}]</span>
-            <span className="ml-3 opacity-60">{contact.label}</span>
-          </p>
-          <p className="mono-label hidden opacity-60 md:block">{contact.kicker}</p>
-        </div>
-
+      {/* The chapter label and the availability strapline are both deleted. The
+          heading says SAY HI three words later, the AVAILABILITY column below
+          states the same offer in a place the reader can act on, and the footer
+          is the one screen that does not need announcing. What is left starts
+          higher and sits as one group instead of one line at the ceiling, a
+          heading pushed to the middle by mt-auto, and content at the floor. */}
+      {/* pt clears the floating nav pill, which is 60px tall and sits 16px from
+          the top: any less and LET'S disappears behind the glass. */}
+      <div ref={innerRef} className="flex flex-1 flex-col px-5 pt-28 md:px-8 md:pt-32">
         <h2
-          className="display-xl mt-auto"
+          className="display-xl"
           aria-label={`${contact.lineA} ${contact.lineB}`}
         >
           <Line text={contact.lineA} />
@@ -104,7 +104,7 @@ export default function Contact() {
             AVAILABILITY lives here now. It used to sit in the bottom bar, and
             deleting that bar would otherwise have deleted the one line on the
             site that says he is actually looking. */}
-        <div className="ct-soft mt-12 grid grid-cols-1 gap-8 pb-8 md:grid-cols-3 md:gap-10">
+        <div className="ct-soft mt-14 grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
           <div>
             <p className={COL_LABEL}>EMAIL</p>
             <div className="mt-4 border-t border-[var(--hair)] pt-5">
@@ -168,7 +168,7 @@ export default function Contact() {
         {/* Two groups, not four evenly spaced items. Location and time moved up
             into AVAILABILITY where they mean something; what is left is the
             colophon on one side and the way back on the other. */}
-        <div className="ct-soft hairline-t flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4">
+        <div className="ct-soft hairline-t mt-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4">
           <p className="mono-label opacity-60">
             © 2026 TEJ PRAKASH
             <span className="ml-3 hidden lg:inline">· {contact.credit}</span>

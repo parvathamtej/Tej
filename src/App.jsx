@@ -7,7 +7,6 @@ import Preloader from './components/Preloader'
 import DotField from './components/DotField'
 import Grain from './components/Grain'
 import Cursor from './components/Cursor'
-import Progress from './components/Progress'
 import Navbar from './components/Navbar'
 import Hero from './sections/Hero'
 import Pattern from './sections/Pattern'
@@ -111,7 +110,6 @@ export default function App() {
       <Preloader onDone={() => setStarted(true)} />
       <Grain />
       <Cursor />
-      <Progress />
       <Navbar />
       <main
         className="site-main relative z-10 mb-[100dvh]"

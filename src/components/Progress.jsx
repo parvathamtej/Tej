@@ -65,11 +65,17 @@ export default function Progress() {
   }
 
   return (
-    // The hover zone: 20px deep, invisible, thickens the instrument
-    <div className="group/bar pointer-events-none fixed inset-x-0 top-0 z-[60]">
-      <div className="pointer-events-auto absolute inset-x-0 top-0 h-5" />
-      <div className="relative h-[3px] w-full overflow-visible bg-[rgba(237,234,227,0.12)] transition-all duration-300 group-hover/bar:h-[6px]">
-        <div ref={barRef} aria-hidden="true" className="absolute inset-0 origin-left bg-acid" />
+    // Lives INSIDE the navigation pill now, along its lower edge, so progress
+    // and navigation are one object instead of two strips competing at the top
+    // of the screen. Inset to clear the pill's corner radius, and rounded so it
+    // reads as part of the same shape.
+    <div className="group/bar pointer-events-none absolute inset-x-6 bottom-[3px] z-[2] md:inset-x-8">
+      <div className="relative h-[2px] w-full overflow-visible rounded-full bg-[rgba(237,234,227,0.16)] transition-all duration-300 group-hover/bar:h-[4px]">
+        <div
+          ref={barRef}
+          aria-hidden="true"
+          className="absolute inset-0 origin-left rounded-full bg-acid"
+        />
         <nav ref={navRef} aria-label="Chapters" className="absolute inset-0">
           {chapters.map((c) => (
             <a
@@ -79,16 +85,16 @@ export default function Progress() {
               onClick={(e) => go(e, c.target)}
               aria-label={c.name}
               data-cursor=""
-              className="group/tick pointer-events-auto absolute top-0 block h-5 w-5 -translate-x-1/2"
+              className="group/tick pointer-events-auto absolute -top-2 block h-6 w-5 -translate-x-1/2"
               style={{ left: '0%' }}
             >
-              {/* The notch: an ink gap that segments the bar */}
-              <span className="absolute left-1/2 top-0 block h-full max-h-[6px] w-[3px] -translate-x-1/2 bg-ink" />
-              <span className="absolute left-1/2 top-0 block h-[3px] w-px -translate-x-1/2 bg-[rgba(237,234,227,0.45)] transition-colors duration-200 group-hover/tick:bg-acid group-hover/bar:h-[6px]" />
-              {/* Label pill on tick hover */}
+              {/* The notch: a gap that segments the bar into chapters */}
+              <span className="absolute left-1/2 top-2 block h-[2px] w-[3px] -translate-x-1/2 bg-[var(--bg-page)] transition-all duration-300 group-hover/bar:h-[4px]" />
+              <span className="absolute left-1/2 top-2 block h-[2px] w-px -translate-x-1/2 bg-[rgba(237,234,227,0.5)] transition-all duration-200 group-hover/tick:bg-acid group-hover/bar:h-[4px]" />
+              {/* Label pill on tick hover, below the bar and clear of the pill */}
               <span
                 data-audit-ignore
-                className="mono-label pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap border border-[var(--hair)] bg-ink px-2.5 py-1 opacity-0 transition-opacity duration-200 group-hover/tick:opacity-100"
+                className="nav-glass mono-label pointer-events-none absolute left-1/2 top-7 -translate-x-1/2 whitespace-nowrap rounded-full px-2.5 py-1 opacity-0 transition-opacity duration-200 group-hover/tick:opacity-100"
               >
                 {c.name}
               </span>

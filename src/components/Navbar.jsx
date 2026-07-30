@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Progress from './Progress'
 import { identity } from '../data/content'
 
 const LINKS = [
@@ -40,14 +41,12 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 text-[var(--fg-page)]">
-        <nav
-          className="flex items-center justify-between px-5 py-4 md:px-8"
-          style={{
-            background:
-              'linear-gradient(to bottom, color-mix(in srgb, var(--bg-page) 72%, transparent), transparent)',
-          }}
-        >
+      {/* A floating glass pill rather than a full-width strip with a gradient
+          bleeding out of it, and the scroll progress lives along its lower edge
+          instead of as a second bar pinned to the very top of the screen: one
+          object that says both where you are and where you can go. */}
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 px-3 pt-3 text-[var(--fg-page)] md:px-6 md:pt-4">
+        <nav className="nav-glass group/bar pointer-events-auto relative mx-auto flex max-w-[1500px] items-center justify-between gap-6 rounded-full py-3 pl-5 pr-4 md:pl-7 md:pr-6">
           <a
             href="#top"
             onClick={(e) => {
@@ -84,6 +83,7 @@ export default function Navbar() {
           >
             {open ? 'CLOSE ✕' : 'INDEX ☰'}
           </button>
+          <Progress />
         </nav>
       </header>
 

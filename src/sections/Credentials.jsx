@@ -53,7 +53,12 @@ export default function Credentials() {
         <div className="cr-col">
           <p className={COL_LABEL}>DEGREE</p>
           <div className="mt-6 border-t border-[var(--hair)] pt-6">
-            <p className="display-s max-w-[30ch]">{education.degree}</p>
+            {/* The degree is the anchor of ITS column, not a second section
+                heading. The two columns beside it list items at 16px, so a
+                31px display step made this one column shout across the row.
+                At the deck step it is still visibly the most important line in
+                the row (1.5x its siblings) and clearly below the heading. */}
+            <p className="deck max-w-[26ch] font-medium">{education.degree}</p>
             <p className="body-copy mt-3 text-bone-dim">{education.focus}</p>
             <p className="mono-label !text-[0.875rem] !normal-case mt-4 opacity-70">
               {education.school}
