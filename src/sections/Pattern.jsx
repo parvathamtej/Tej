@@ -12,21 +12,141 @@ gsap.registerPlugin(useGSAP, ScrollTrigger)
 // built, so this interaction performs the sentence it accompanies.
 function VisualHansi() {
   const v = patternVisuals.hansi
-  const layer = (src, cls) =>
+  const viewRef = useRef(null)
+  const lensRef = useRef(null)
+  const innerRef = useRef(null)
+  const readoutRef = useRef(null)
+  const hintRef = useRef(null)
+
+  const layer = (src, cls, extra = '') =>
     src ? (
-      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <img src={src} alt="" className={`absolute inset-0 h-full w-full object-cover ${extra}`} />
     ) : (
-      <div className={`absolute inset-0 ${cls}`} />
+      <div className={`absolute inset-0 ${cls} ${extra}`} />
     )
+
+  // The lens is a window, not an overlay: the AFTER layer inside it is sized to
+  // the whole viewport and pushed by the lens's own offset, so what shows
+  // through is exactly the part of the finished room that sits under the
+  // cursor. That is the interaction the software itself performs, which is why
+  // it belongs here rather than a caption claiming it.
+  useGSAP(
+    () => {
+      const view = viewRef.current
+      const lens = lensRef.current
+      if (!view || !lens) return
+      const mm = gsap.matchMedia()
+
+      mm.add(MM.desk, () => {
+        if (!window.matchMedia('(pointer: fine)').matches) return
+        let rect = view.getBoundingClientRect()
+        const remeasure = () => {
+          rect = view.getBoundingClientRect()
+          // The inner layer must be the size of the WHOLE frame, not the lens,
+          // or the window shows a squashed copy instead of a slice.
+          const inner = innerRef.current
+          if (inner) {
+            inner.style.width = `${rect.width}px`
+            inner.style.height = `${rect.height}px`
+          }
+        }
+        remeasure()
+        // Rect is read on pointer movement and on refresh, never per frame: the
+        // pinned frame does not move while the beat is on screen, and a
+        // per-frame getBoundingClientRect is a forced layout (V14 rule).
+        let hovering = false
+        let px = 0
+        let py = 0
+        const onMove = (e) => {
+          rect = view.getBoundingClientRect()
+          px = e.clientX - rect.left
+          py = e.clientY - rect.top
+          hovering = px >= 0 && py >= 0 && px <= rect.width && py <= rect.height
+        }
+        const onLeave = () => {
+          hovering = false
+        }
+
+        let shownHint = true
+        let lastX = null
+        let lastY = null
+        const size = lens.offsetWidth || 150
+        const place = () => {
+          const w = rect.width || 1
+          const h = rect.height || 1
+          // When the cursor is not in the frame the lens sweeps itself from the
+          // beat's own progress, so the visual still performs while scrolling.
+          const autoT = view.__lensAuto ?? 0
+          const cxp = hovering ? px : (0.12 + autoT * 0.76) * w
+          const cyp = hovering ? py : h * 0.52
+          const x = Math.max(0, Math.min(w - size, cxp - size / 2))
+          const y = Math.max(0, Math.min(h - size, cyp - size / 2))
+          // Nothing moved, nothing to write. Without this the lens would keep
+          // restyling three elements on every frame of the entire page, which
+          // is the cost pattern that made the dossier spotlight expensive.
+          if (x === lastX && y === lastY) return
+          lastX = x
+          lastY = y
+          lens.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`
+          innerRef.current.style.transform = `translate3d(${(-x).toFixed(1)}px, ${(-y).toFixed(1)}px, 0)`
+          const ro = readoutRef.current
+          if (ro) ro.textContent = `X: ${Math.round(cxp)}PX · Y: ${Math.round(cyp)}PX`
+          if (hovering === shownHint) {
+            shownHint = !hovering
+            if (hintRef.current) hintRef.current.style.opacity = hovering ? '0' : '1'
+          }
+        }
+        place()
+
+        view.addEventListener('pointermove', onMove, { passive: true })
+        view.addEventListener('pointerleave', onLeave)
+        ScrollTrigger.addEventListener('refresh', remeasure)
+        gsap.ticker.add(place)
+        return () => {
+          view.removeEventListener('pointermove', onMove)
+          view.removeEventListener('pointerleave', onLeave)
+          ScrollTrigger.removeEventListener('refresh', remeasure)
+          gsap.ticker.remove(place)
+        }
+      })
+      return () => mm.revert()
+    },
+    { scope: viewRef },
+  )
+
   return (
-    <div className="relative h-full w-full overflow-hidden">
+    <div ref={viewRef} className="pv-view relative h-full w-full overflow-hidden">
       {layer(v.beforeSrc, 'ph-before')}
+
+      {/* Reduced motion and mobile get the plain answer: the finished room, at
+          rest, with both states named. No lens, nothing to chase. */}
       <div className="pv-wipe absolute inset-0" style={{ clipPath: 'inset(0 100% 0 0)' }}>
         {layer(v.afterSrc, 'ph-after')}
       </div>
       <div className="pv-divider absolute inset-y-0 left-0 w-px bg-acid" />
+
+      <div ref={lensRef} className="pv-lens" aria-hidden="true">
+        <div ref={innerRef} className="pv-lens-inner">
+          {layer(v.afterSrc, 'ph-after')}
+        </div>
+        <span className="pv-lens-line pv-lens-line--v" style={{ left: '33.33%' }} />
+        <span className="pv-lens-line pv-lens-line--v" style={{ left: '66.66%' }} />
+        <span className="pv-lens-line pv-lens-line--h" style={{ top: '33.33%' }} />
+        <span className="pv-lens-line pv-lens-line--h" style={{ top: '66.66%' }} />
+        <span className="pv-lens-dot" style={{ top: -3, left: -3 }} />
+        <span className="pv-lens-dot" style={{ top: -3, right: -3 }} />
+        <span className="pv-lens-dot" style={{ bottom: -3, left: -3 }} />
+        <span className="pv-lens-dot" style={{ bottom: -3, right: -3 }} />
+        <span className="pv-lens-tag mono-label">{v.afterLabel}</span>
+      </div>
+
       <p className="mono-label absolute bottom-4 left-4 opacity-70">{v.beforeLabel}</p>
-      <p className="mono-label absolute bottom-4 right-4 text-acid">{v.afterLabel}</p>
+      <p ref={hintRef} className="pv-hint mono-label absolute left-1/2 top-4 -translate-x-1/2 text-acid">
+        {v.hint}
+      </p>
+      <p ref={readoutRef} className="mono-label absolute bottom-4 right-4 opacity-60">
+        X: 0PX · Y: 0PX
+      </p>
     </div>
   )
 }
@@ -34,23 +154,28 @@ function VisualHansi() {
 // ─── Beat 2 · GlobalLogic: forty fields collapsing into one line ─────────────
 function VisualGlobalLogic() {
   const v = patternVisuals.globallogic
+  const total = v.screens.reduce((n, s) => n + s.fields.length, 0)
   const drift = useMemo(() => {
     const r = mulberry32(41)
-    return Array.from({ length: v.fieldCount }, () => Math.round(r() * 40 - 20))
-  }, [v.fieldCount])
+    return Array.from({ length: total }, () => Math.round(r() * 40 - 20))
+  }, [total])
+  let i = -1
   return (
     <div className="relative flex h-full w-full flex-col justify-center gap-8 p-6 md:p-8">
       <div className="grid grid-cols-5 gap-x-4 gap-y-0">
-        {Array.from({ length: v.screens }, (_, s) => (
-          <div key={s} className="flex flex-col gap-2">
-            <p className="mono-label mb-1 opacity-70">0{s + 1}</p>
-            {Array.from({ length: v.fieldCount / v.screens }, (_, f) => (
-              <div
-                key={f}
-                className="pv-field field-cell h-5 w-full"
-                data-drift={drift[s * (v.fieldCount / v.screens) + f]}
-              />
-            ))}
+        {v.screens.map((screen, s) => (
+          <div key={screen.name} className="flex flex-col gap-2">
+            <p className="mono-label mb-1 opacity-70">
+              0{s + 1} <span className="opacity-60">{screen.name}</span>
+            </p>
+            {screen.fields.map((label) => {
+              i += 1
+              return (
+                <div key={label} className="pv-field field-cell h-5 w-full" data-drift={drift[i]}>
+                  <span className="field-cell__label">{label}</span>
+                </div>
+              )
+            })}
           </div>
         ))}
       </div>
@@ -72,8 +197,11 @@ function VisualGlobalLogic() {
 
 // ─── Beat 3 · Arrivio: a demand field blooming ───────────────────────────────
 // Generated, deterministic, no real data and no client positions.
-const HEX_COLS = 13
-const HEX_ROWS = 8
+// Grid and viewBox are shaped to the frame the card actually gives this visual
+// (a wide, short box). A 640x420 viewBox letterboxed inside it, leaving the map
+// floating in the middle with a third of the frame empty on either side.
+const HEX_COLS = 19
+const HEX_ROWS = 6
 const FOCUS = { x: 0.62, y: 0.42 }
 
 function buildHexes() {
@@ -103,8 +231,8 @@ function VisualArrivio() {
     const r = mulberry32(19)
     return Array.from({ length: 56 }, () => ({ x: r(), y: r() }))
   }, [])
-  const W = 640
-  const H = 420
+  const W = 1000
+  const H = 336
   return (
     <div className="relative h-full w-full">
       <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" aria-hidden="true">
@@ -135,14 +263,54 @@ function VisualArrivio() {
             className="pv-hex"
             data-weight={c.weight.toFixed(2)}
             data-dist={c.dist.toFixed(3)}
-            points={hexPoints(40 + c.x * (W - 80), 30 + c.y * (H - 60), 16)}
+            points={hexPoints(40 + c.x * (W - 80), 30 + c.y * (H - 60), 15)}
             fill="#C8F04B"
             stroke="#C8F04B"
             strokeOpacity="0.25"
             opacity="0"
           />
         ))}
+
+        {/* Tags are what make this read as a MAP rather than a bloom: each one
+            names the layer under it, anchored to the cell it describes with a
+            short leader so the label never sits on top of the data. */}
+        {patternVisuals.arrivio.tags.map((t) => {
+          const x = 40 + t.at.x * (W - 80)
+          const y = 30 + t.at.y * (H - 60)
+          const flip = t.at.x > 0.7
+          const lx = flip ? x - 26 : x + 26
+          const colour = t.tone === 'acid' ? '#C8F04B' : '#EDEAE3'
+          return (
+            <g key={t.key} className="pv-tag" opacity="0">
+              <circle cx={x} cy={y} r="3" fill={colour} />
+              <line x1={x} y1={y} x2={lx} y2={y - 16} stroke={colour} strokeOpacity="0.5" strokeWidth="1" />
+              <text
+                x={lx}
+                y={y - 22}
+                fill={colour}
+                textAnchor={flip ? 'end' : 'start'}
+                className="pv-tag-text"
+              >
+                {t.text}
+              </text>
+            </g>
+          )
+        })}
       </svg>
+
+      {/* Legend: three marks, three plain sentences. A hex map that does not say
+          what its marks mean is a texture. */}
+      <ul
+        className="pv-legend mono-label absolute bottom-3 left-3 flex flex-col gap-1.5"
+        style={{ opacity: 0 }}
+      >
+        {patternVisuals.arrivio.legend.map((l) => (
+          <li key={l.key} className="flex items-center gap-2 !normal-case opacity-80">
+            <span aria-hidden="true" className={`pv-mark pv-mark--${l.mark}`} />
+            {l.text}
+          </li>
+        ))}
+      </ul>
       <p className="mono-label absolute bottom-4 right-4 opacity-70">
         {patternVisuals.arrivio.label}
       </p>
@@ -154,11 +322,35 @@ const VISUALS = [VisualHansi, VisualGlobalLogic, VisualArrivio]
 
 // Scrubbed visual choreography, shared by the pinned desktop split and the
 // stacked mobile blocks so the two layouts cannot drift apart.
-function addBeatVisual(tl, root, beat, at, len) {
+function addBeatVisual(tl, root, beat, at, len, lens = false) {
   const q = gsap.utils.selector(root)
   if (beat === 0) {
-    tl.to(q('.pv-wipe'), { clipPath: 'inset(0% 0% 0% 0%)', ease: 'none', duration: len }, at)
-    tl.fromTo(q('.pv-divider'), { left: '0%' }, { left: '100%', ease: 'none', duration: len }, at)
+    if (lens) {
+      // Desktop drives the inspector lens instead of wiping: a full-width wipe
+      // would paint the finished room over the entire frame and leave the lens
+      // nothing to reveal. The proxy carries the beat's progress to the ticker
+      // that positions the lens, so it sweeps while scrolling and hands over to
+      // the cursor the moment the reader points at it.
+      const view = q('.pv-view')[0]
+      if (view) {
+        const p = { t: 0 }
+        tl.to(
+          p,
+          {
+            t: 1,
+            ease: 'none',
+            duration: len,
+            onUpdate: () => {
+              view.__lensAuto = p.t
+            },
+          },
+          at,
+        )
+      }
+    } else {
+      tl.to(q('.pv-wipe'), { clipPath: 'inset(0% 0% 0% 0%)', ease: 'none', duration: len }, at)
+      tl.fromTo(q('.pv-divider'), { left: '0%' }, { left: '100%', ease: 'none', duration: len }, at)
+    }
   }
   if (beat === 1) {
     tl.to(
@@ -195,6 +387,10 @@ function addBeatVisual(tl, root, beat, at, len) {
       { attr: { r: 190 }, opacity: 0, ease: 'none', duration: len * 0.7 },
       at + len * 0.25,
     )
+    // Tags and legend land after the bloom has taken shape: labelling an empty
+    // field would explain nothing, and labelling it mid-bloom competes with it.
+    tl.to(q('.pv-tag'), { opacity: 1, duration: len * 0.14, stagger: len * 0.07 }, at + len * 0.5)
+    tl.to(q('.pv-legend'), { opacity: 1, duration: len * 0.12 }, at + len * 0.55)
   }
 }
 
@@ -346,7 +542,7 @@ export default function Pattern() {
         })
         tl.set({}, {}, STATES)
         for (let i = 0; i < pattern.pairs.length; i++) {
-          addBeatVisual(tl, visuals[i], i, i + 0.08, 0.84)
+          addBeatVisual(tl, visuals[i], i, i + 0.08, 0.84, true)
         }
         return () => ScrollTrigger.removeEventListener('refreshInit', sizeStage)
       })
@@ -372,7 +568,7 @@ export default function Pattern() {
       mm.add(MM.reduce, () => {
         if (!rootRef.current) return
         const q = gsap.utils.selector(rootRef.current)
-        gsap.set(q('.pt-panel, .pt-visual, .pv-input'), { autoAlpha: 1, y: 0 })
+        gsap.set(q('.pt-panel, .pt-visual, .pv-input, .pv-tag, .pv-legend'), { autoAlpha: 1, y: 0 })
         gsap.set(q('.pv-wipe, .pv-sentence'), { clipPath: 'inset(0% 0% 0% 0%)' })
         gsap.set(q('.pv-divider'), { left: '50%' })
         q('.pv-hex').forEach((h) => gsap.set(h, { opacity: Number(h.dataset.weight) }))

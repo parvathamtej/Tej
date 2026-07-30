@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -59,6 +59,20 @@ gsap.registerPlugin(useGSAP, ScrollTrigger)
 
 // Preview = the first paragraph, or the first two when the opener is a single
 // sentence. Cuts land on paragraph boundaries so no sentence is ever split.
+// data-lenis-prevent hands the wheel to a container's native scrolling. That is
+// required when the container really can scroll (V11: an expanded card's
+// overflow is otherwise unreachable), and actively BREAKS the page when it
+// cannot — Lenis steps aside, the container has nothing to consume, and the
+// wheel does nothing at all. A pinned dossier is mostly rail and card, so a
+// permanently-marked rail froze scrolling across most of the section. The
+// attribute is therefore only ever present while the element actually overflows.
+const OVERFLOW_SLOP = 4
+function syncLenisPrevent(el) {
+  if (!el) return
+  if (el.scrollHeight - el.clientHeight > OVERFLOW_SLOP) el.setAttribute('data-lenis-prevent', '')
+  else el.removeAttribute('data-lenis-prevent')
+}
+
 const sentenceCount = (p) => (p.match(/[.!?](\s|$)/g) || []).length
 function splitPreview(paras) {
   if (paras.length <= 1) return [paras, []]
@@ -73,8 +87,18 @@ function Card({ card, n }) {
   const [open, setOpen] = useState(card.defaultOpen || reduced())
   const [preview, rest] = splitPreview(card.paras)
   const bodyId = `cs-body-${card.key}`
+  const ref = useRef(null)
+  // Expanding is exactly when a card starts (or stops) overflowing, so the
+  // wheel handoff has to be re-decided on every toggle, after the disclosure
+  // grid has settled to its new height.
+  useEffect(() => {
+    const el = ref.current
+    const id = setTimeout(() => syncLenisPrevent(el), 420)
+    return () => clearTimeout(id)
+  }, [open])
   return (
-    <article data-lenis-prevent
+    <article
+      ref={ref}
       className="cs-card no-scrollbar flex flex-col border border-[var(--hair)] p-6 md:h-full md:w-full md:flex-none md:overflow-y-auto md:p-9">
       <span aria-hidden="true" className="card-ghost">
         0{n}
@@ -132,6 +156,7 @@ export default function CaseStudy({ study }) {
   const pinRef = useRef(null)
   const trackRef = useRef(null)
   const dotsRef = useRef(null)
+  const railRef = useRef(null)
 
   const cards = [
     { key: `${study.id}-intro`, heading: null, paras: study.intro },
@@ -155,6 +180,24 @@ export default function CaseStudy({ study }) {
       // reads it every frame. (Single dossiers render prose, no cards at all,
       // so their spotlight context exits immediately.)
       const live = { pos: 0 }
+
+      // Whether the rail and cards can scroll depends on viewport height and on
+      // font metrics, so it is re-decided on every refresh rather than assumed.
+      const syncScrollables = () => {
+        syncLenisPrevent(railRef.current)
+        q('.cs-card').forEach(syncLenisPrevent)
+      }
+      syncScrollables()
+      ScrollTrigger.addEventListener('refresh', syncScrollables)
+      // Timing-based re-measurement is not reliable here: every scheduled pass
+      // (fonts.ready, a delayed call, the initial refresh) can land while the
+      // preloader still owns the layout, and a stale "yes it overflows" leaves
+      // the wheel handed to a container with nothing to scroll. The answer is
+      // therefore recomputed on pointerenter — the last possible moment before
+      // a wheel event can arrive, and always against the settled layout.
+      const targets = [railRef.current, ...q('.cs-card')].filter(Boolean)
+      const onEnter = (e) => syncLenisPrevent(e.currentTarget)
+      targets.forEach((el) => el.addEventListener('pointerenter', onEnter))
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.from(q('.cs-rail > *'), {
@@ -368,7 +411,11 @@ export default function CaseStudy({ study }) {
         }
       })
 
-      return () => mm.revert()
+      return () => {
+        ScrollTrigger.removeEventListener('refresh', syncScrollables)
+        targets.forEach((el) => el.removeEventListener('pointerenter', onEnter))
+        mm.revert()
+      }
     },
     { scope: rootRef },
   )
@@ -392,11 +439,11 @@ export default function CaseStudy({ study }) {
           single ? 'min-h-[70dvh] content-center' : 'md:h-dvh'
         }`}
       >
-        {/* Left rail: the chapter heading and the persistent reference. It scrolls
-            if it must, so data-lenis-prevent is mandatory (Lenis otherwise eats
-            the wheel and the overflow is unreachable). */}
+        {/* Left rail: the chapter heading and the persistent reference. It can
+            scroll when a short viewport forces it to, so the wheel handoff is
+            decided by measurement (see syncLenisPrevent), never hardcoded. */}
         <aside
-          data-lenis-prevent
+          ref={railRef}
           className="cs-rail no-scrollbar flex flex-col gap-3 md:gap-4 md:overflow-y-auto md:pr-4"
         >
           <p className="mono-label text-[var(--accent-ui)]">

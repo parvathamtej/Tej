@@ -301,10 +301,27 @@ body {
   }
 }
 
-/* Pattern beat 2: schematic form fields */
+/* Pattern beat 2: schematic form fields. Each one carries its real label, so
+   the reader recognises the form rather than taking "forty fields" on faith.
+   The label is clipped, never wrapped: these boxes are one line tall by design
+   and a wrapped label would change the grid's rhythm. */
 .field-cell {
   border: 1px solid rgba(237, 234, 227, 0.28);
   background: rgba(237, 234, 227, 0.04);
+  display: flex;
+  align-items: center;
+  padding-inline: 4px;
+  overflow: hidden;
+}
+.field-cell__label {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--fg-page) 62%, transparent);
 }
 
 /* Pattern beat 2: blinking caret (a caret is an affordance, not decoration) */
@@ -325,6 +342,124 @@ body {
   .caret {
     animation: none;
   }
+}
+
+/* Pattern beat 1: the detail-inspector lens. A window into the AFTER layer that
+   follows the cursor, and sweeps itself from the beat's progress when nobody is
+   pointing at it. Sized in one place so JS can read offsetWidth rather than
+   carry a duplicate constant. */
+.pv-lens {
+  /* Only the desktop context drives the lens, and an undriven lens is just a
+     stray square of the finished room parked in the corner. Mobile keeps the
+     wipe instead. */
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 150px;
+  overflow: hidden;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--accent-ui) 70%, transparent);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 18px 50px -20px rgb(0 0 0 / 0.9);
+  will-change: transform;
+}
+.pv-lens-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Sized to the whole viewport, offset by the lens position: what shows is the
+     part of the finished room that is genuinely under the cursor. */
+  width: var(--pv-view-w, 100%);
+  height: var(--pv-view-h, 100%);
+  will-change: transform;
+}
+.pv-lens-line {
+  position: absolute;
+  background: color-mix(in srgb, var(--accent-ui) 26%, transparent);
+}
+.pv-lens-line--v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.pv-lens-line--h {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+.pv-lens-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: var(--accent-ui);
+}
+.pv-lens-tag {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  color: var(--accent-ui);
+  font-size: 0.5rem !important;
+}
+.pv-hint {
+  display: none;
+  transition: opacity 0.3s ease;
+}
+@media (min-width: 768px) {
+  .pv-lens,
+  .pv-hint {
+    display: block;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-lens,
+  .pv-hint {
+    display: none;
+  }
+}
+
+/* Pattern beat 3: hex-map annotation. The legend sits over the map's dim
+   low-demand corner, so it carries its own backdrop the way a real map key
+   does rather than relying on the terrain under it staying empty. */
+.pv-legend {
+  background: color-mix(in srgb, var(--bg-page) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fg-page) 10%, transparent);
+  padding: 7px 10px;
+}
+.pv-tag-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  /* Cartographic halo: DEMAND by definition labels the brightest cluster on the
+     map, so its text lands on top of the densest cells. Painting the stroke
+     under the fill keeps it readable without a box that would hide data. */
+  paint-order: stroke fill;
+  stroke: var(--bg-page);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.pv-mark {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+}
+.pv-mark--dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fg-page);
+  margin-inline: 2.5px;
+}
+.pv-mark--hex {
+  background: var(--accent-ui);
+  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
+}
+.pv-mark--ring {
+  border: 1px solid color-mix(in srgb, var(--accent-ui) 60%, transparent);
+  border-radius: 999px;
 }
 
 /* Pattern beat 1 placeholder panels (real photography pending image rights;

@@ -125,14 +125,51 @@ export const patternVisuals = {
     afterSrc: null,
     beforeLabel: 'BEFORE STATE',
     afterLabel: 'AFTER DESIGN',
+    hint: 'MOVE THE CURSOR TO REVEAL',
   },
   globallogic: {
     sentence: 'book the white Fortuner for Ramesh, pickup tomorrow 10am',
-    fieldCount: 40,
-    screens: 5,
+    // The five screens a booking used to be typed across. Named fields, because
+    // "forty empty rectangles" asks the reader to take the number on faith,
+    // while forty labelled ones let them recognise the form they have filled in
+    // themselves. Field count is derived from this list, never hardcoded.
+    screens: [
+      {
+        name: 'CUSTOMER',
+        fields: ['Customer name', 'Phone number', 'Alternate phone', 'Email', 'ID proof type', 'ID number', 'Billing address', 'City'],
+      },
+      {
+        name: 'VEHICLE',
+        fields: ['Vehicle class', 'Model', 'Colour', 'Registration no.', 'Transmission', 'Fuel type', 'Seats', 'Add-ons'],
+      },
+      {
+        name: 'SCHEDULE',
+        fields: ['Pickup date', 'Pickup time', 'Return date', 'Return time', 'Pickup branch', 'Drop branch', 'Driver needed', 'Route'],
+      },
+      {
+        name: 'PRICING',
+        fields: ['Base rate', 'Km limit', 'Extra km rate', 'Security deposit', 'Discount code', 'Tax slab', 'Total payable', 'Payment mode'],
+      },
+      {
+        name: 'APPROVAL',
+        fields: ['Trip purpose', 'Company', 'GST number', 'Reference no.', 'Notes', 'Approver', 'Documents', 'Signature'],
+      },
+    ],
   },
   arrivio: {
     label: 'ILLUSTRATIVE',
+    // Tags turn a bloom into a map: without them the hexes are decoration, with
+    // them they say what the model is actually reading and producing.
+    tags: [
+      { key: 'customers', text: 'CUSTOMERS', at: { x: 0.17, y: 0.74 }, tone: 'bone' },
+      { key: 'demand', text: 'DEMAND', at: { x: 0.62, y: 0.42 }, tone: 'acid' },
+      { key: 'supply', text: 'SUPPLY', at: { x: 0.86, y: 0.2 }, tone: 'bone' },
+    ],
+    legend: [
+      { key: 'l-cust', mark: 'dot', text: 'One customer request' },
+      { key: 'l-dem', mark: 'hex', text: 'Predicted demand weight' },
+      { key: 'l-sup', mark: 'ring', text: 'Supply radius' },
+    ],
   },
 }
 
